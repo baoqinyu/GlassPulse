@@ -372,6 +372,11 @@ namespace GlassPulse
             {
                 cachedWeek = WeekClock.Aggregate(normalized, prices, now, zone, startDay, weekOffset);
                 cachedZone = zone.Id;
+                foreach (ProviderSummary provider in new[] { cachedWeek.Codex, cachedWeek.Claude })
+                {
+                    var first = normalized.Where(x => x.Provider == provider.Provider).OrderBy(x => x.Timestamp).FirstOrDefault();
+                    provider.FirstDate = first == null ? null : TimeZoneInfo.ConvertTime(first.Timestamp, zone).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                }
             }
             WeekSummary week = cachedWeek.Copy();
             week.RefreshedAt = now;

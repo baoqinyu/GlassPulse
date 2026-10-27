@@ -37,6 +37,8 @@ namespace GlassPulse
         private bool hourly = true;
         private bool chartDollars;
         private string chartSignature;
+        private WeekSummary loadedSummary;
+        private bool updatingWeekSelector;
 
         internal WidgetWindow(Settings preferences, string dataDirectory, string pricePath, bool demo)
         {
@@ -47,6 +49,7 @@ namespace GlassPulse
             using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("GlassPulse.Widget.xaml"))
                 View = (Grid)XamlReader.Load(stream);
             Content = View;
+            Theme.Apply(View, preferences.Theme == "light");
             Title = "GlassPulse";
             WindowStyle = WindowStyle.None;
             ResizeMode = ResizeMode.NoResize;
@@ -62,6 +65,18 @@ namespace GlassPulse
             Top = double.IsNaN(preferences.Top) || double.IsInfinity(preferences.Top) ? -10000 : preferences.Top;
             Get<Button>("PreviousButton").Click += delegate { ChangeWeek(-1); };
             Get<Button>("NextButton").Click += delegate { ChangeWeek(1); };
+            Get<Button>("ThemeButton").Click += delegate { Preferences.Theme = Preferences.Theme == "light" ? "dark" : "light"; ApplyAppearance(); Save(); };
+            Get<Button>("CodexBudget").Click += delegate { OpenSettings("Codex"); };
+            Get<Button>("ClaudeBudget").Click += delegate { OpenSettings("Claude"); };
+            Get<ComboBox>("WeekSelector").SelectionChanged += delegate {
+                if (updatingWeekSelector) return;
+                var item = Get<ComboBox>("WeekSelector").SelectedItem as ComboBoxItem;
+                if (item == null) return;
+                int target = (int)item.Tag;
+                if (target == weekOffset) return;
+                weekOffset = target;
+                if (demo) ChangeWeek(0); else Refresh();
+            };
             Get<Button>("SettingsButton").Click += delegate { OpenSettings(); };
             Get<Button>("HideButton").Click += delegate { Hide(); };
             Get<Button>("DetailsButton").Click += delegate { Preferences.Expanded = !Preferences.Expanded; ApplyAppearance(); Save(); };
@@ -75,7 +90,7 @@ namespace GlassPulse
                 if (e.Key == Key.F5) { Refresh(); e.Handled = true; }
             };
             SourceInitialized += delegate {
-                if (!demo) { NativeGlass.Attach(this, ToggleVisibility); NativeGlass.ApplyBackdrop(this, Preferences.Expanded && !Preferences.Mini); }
+                if (!demo) { NativeGlass.Attach(this, ToggleVisibility); NativeGlass.ApplyBackdrop(this, Preferences.Expanded && !Preferences.Mini, Preferences.Theme == "light"); }
             };
             Loaded += delegate {
                 if (Left <= -9999 || Top <= -9999)
@@ -109,8 +124,12 @@ namespace GlassPulse
 
         private ContextMenu BuildMenu()
         {
-            ContextMenu menu = new ContextMenu { Background = new SolidColorBrush(Color.FromRgb(31, 40, 47)), Foreground = Brushes.WhiteSmoke };
+            ContextMenu menu = new ContextMenu { Background = (Brush)View.Resources["SettingsSurface"], Foreground = (Brush)View.Resources["PrimaryText"] };
             AddMenu(menu, "显示 / 隐藏    Ctrl+Alt+G", ToggleVisibility);
+            AddMenu(menu, "显示 Codex + Claude", delegate { SelectProviders("all"); });
+            AddMenu(menu, "仅显示 Codex", delegate { SelectProviders("codex"); });
+            AddMenu(menu, "仅显示 Claude", delegate { SelectProviders("claude"); });
+            AddMenu(menu, "切换浅色 / 深色", delegate { Preferences.Theme = Preferences.Theme == "light" ? "dark" : "light"; ApplyAppearance(); Save(); });
             AddMenu(menu, "极简横条 / 完整视图", delegate { Preferences.Mini = !Preferences.Mini; ApplyAppearance(); Save(); });
             AddMenu(menu, "保持置顶", delegate { Preferences.AlwaysOnTop = !Preferences.AlwaysOnTop; ApplyAppearance(); Save(); });
             AddMenu(menu, "鼠标穿透 / 恢复交互", ToggleClickThrough);
@@ -149,6 +168,12 @@ namespace GlassPulse
             menu.Items.Add("退出", null, delegate { Dispatcher.Invoke((Action)Quit); });
             tray.ContextMenuStrip = menu;
             tray.DoubleClick += delegate { Dispatcher.Invoke((Action)ToggleVisibility); };
+        }
+
+        private void SelectProviders(string providers)
+        {
+            Preferences.Providers = providers;
+            ApplyAppearance(); Save();
         }
 
         private void ToggleClickThrough()
@@ -193,14 +218,30 @@ namespace GlassPulse
         internal void ApplyAppearance()
         {
             Topmost = Preferences.AlwaysOnTop && !demo;
+            Theme.Apply(View, Preferences.Theme == "light");
+            View.ContextMenu = BuildMenu();
             ApplyLayout();
         }
 
         internal void ApplyLayout()
         {
             bool opening = Preferences.Expanded && Get<StackPanel>("DetailPanel").Visibility != Visibility.Visible;
-            View.Width = Preferences.Expanded && !Preferences.Mini ? 800 : 508;
-            if (!demo) NativeGlass.ApplyBackdrop(this, Preferences.Expanded && !Preferences.Mini);
+            bool codexVisible = Preferences.Providers != "claude";
+            bool claudeVisible = Preferences.Providers != "codex";
+            View.Width = Preferences.Mini && Preferences.Providers != "all" ? 288 : Preferences.Expanded && !Preferences.Mini ? 800 : 508;
+            Get<StackPanel>("CodexLegend").Visibility = codexVisible ? Visibility.Visible : Visibility.Collapsed;
+            Get<StackPanel>("ClaudeLegend").Visibility = claudeVisible ? Visibility.Visible : Visibility.Collapsed;
+            Get<StackPanel>("CodexRow").Visibility = codexVisible ? Visibility.Visible : Visibility.Collapsed;
+            Get<StackPanel>("ClaudeRow").Visibility = claudeVisible ? Visibility.Visible : Visibility.Collapsed;
+            Get<StackPanel>("MiniCodexRow").Visibility = codexVisible ? Visibility.Visible : Visibility.Collapsed;
+            Get<StackPanel>("MiniClaudeRow").Visibility = claudeVisible ? Visibility.Visible : Visibility.Collapsed;
+            Get<Border>("MiniDivider").Visibility = codexVisible && claudeVisible ? Visibility.Visible : Visibility.Collapsed;
+            var mini = Get<Grid>("MiniView");
+            mini.ColumnDefinitions[0].Width = codexVisible ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+            mini.ColumnDefinitions[1].Width = new GridLength(codexVisible && claudeVisible ? 25 : 0);
+            mini.ColumnDefinitions[2].Width = claudeVisible ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+            Get<TextBlock>("ProviderLegend").Text = Preferences.Providers == "codex" ? "Codex" : Preferences.Providers == "claude" ? "Claude" : "Codex / Claude";
+            if (!demo) NativeGlass.ApplyBackdrop(this, Preferences.Expanded && !Preferences.Mini, Preferences.Theme == "light");
             Get<ScrollViewer>("DashboardScroll").MaxHeight = demo ? double.PositiveInfinity : Math.Max(100, SystemParameters.WorkArea.Height - 280);
             Get<StackPanel>("FullView").Visibility = Preferences.Mini ? Visibility.Collapsed : Visibility.Visible;
             Get<Grid>("MiniView").Visibility = Preferences.Mini ? Visibility.Visible : Visibility.Collapsed;
@@ -210,7 +251,7 @@ namespace GlassPulse
             if (SystemParameters.HighContrast) Get<Border>("GlassSurface").Background = Brushes.Black;
             UpdateLayout();
             chartSignature = null;
-            if (Current != null) SetSummary(Current);
+            if (loadedSummary != null) SetSummary(loadedSummary);
             if (opening && !demo && IsLoaded && SystemParameters.ClientAreaAnimation)
             {
                 StackPanel panel = Get<StackPanel>("DetailPanel");
@@ -240,7 +281,7 @@ namespace GlassPulse
 
         private void ChangeWeek(int direction)
         {
-            weekOffset = Math.Max(-51, Math.Min(0, weekOffset + direction));
+            weekOffset = Math.Max(EarliestWeekOffset(), Math.Min(0, weekOffset + direction));
             if (demo)
             {
                 WeekSummary value = DemoSummary();
@@ -249,6 +290,37 @@ namespace GlassPulse
                 SetSummary(value);
             }
             else Refresh();
+        }
+
+        private int EarliestWeekOffset()
+        {
+            DateTime earliest;
+            if (Current == null || !DateTime.TryParse(Current.EarliestDate(), out earliest)) return 0;
+            DateTime current = demo ? new DateTime(2026, 10, 26) : WeekClock.StartOfWeek(DateTime.Now, Preferences.WeekStart);
+            return Math.Min(0, (WeekClock.StartOfWeek(earliest, Preferences.WeekStart) - current).Days / 7);
+        }
+
+        private void UpdateWeekSelector()
+        {
+            var selector = Get<ComboBox>("WeekSelector");
+            int earliest = EarliestWeekOffset();
+            updatingWeekSelector = true;
+            try
+            {
+                DateTime current = demo ? new DateTime(2026, 10, 26) : WeekClock.StartOfWeek(DateTime.Now, Preferences.WeekStart);
+                if (selector.Items.Count != 1 - earliest || selector.Tag == null || (DateTime)selector.Tag != current)
+                {
+                    selector.Items.Clear(); selector.Tag = current;
+                    for (int offset = 0; offset >= earliest; offset--)
+                    {
+                        DateTime start = current.AddDays(offset * 7);
+                        selector.Items.Add(new ComboBoxItem { Content = start.ToString("yyyy.MM.dd") + " 周", Tag = offset });
+                    }
+                }
+                selector.SelectedIndex = Math.Max(0, Math.Min(selector.Items.Count - 1, -weekOffset));
+                selector.ToolTip = "选择所有可用历史周 · 最早记录 " + (Current.EarliestDate() ?? "暂无");
+            }
+            finally { updatingWeekSelector = false; }
         }
 
         internal async void Refresh()
@@ -284,12 +356,19 @@ namespace GlassPulse
 
         internal void SetSummary(WeekSummary summary)
         {
+            loadedSummary = summary;
+            summary = summary.SelectProviders(Preferences.Providers);
             Current = summary;
-            Get<TextBlock>("WeekRange").Text = summary.Start.ToString("MM.dd") + " – " + summary.End.AddDays(-1).ToString("MM.dd");
-            Get<TextBlock>("WeekRange").ToolTip = summary.Start.ToString("yyyy-MM-dd") + " 至 " + summary.End.AddDays(-1).ToString("yyyy-MM-dd") + " · " + TimeZoneInfo.Local.DisplayName;
+            if (weekOffset < EarliestWeekOffset())
+            {
+                weekOffset = EarliestWeekOffset();
+                if (demo) ChangeWeek(0); else { Get<TextBlock>("StatusText").Text = "正在加载所选工具的历史"; Refresh(); }
+                return;
+            }
+            UpdateWeekSelector();
             Get<TextBlock>("WeekBadge").Text = summary.Demo ? "演示" : weekOffset == 0 ? "本周" : "历史";
             Get<Button>("NextButton").IsEnabled = weekOffset < 0;
-            Get<Button>("PreviousButton").IsEnabled = weekOffset > -51;
+            Get<Button>("PreviousButton").IsEnabled = weekOffset > EarliestWeekOffset();
             UpdateProvider(summary.Codex, "Codex", Preferences.CodexBudget);
             UpdateProvider(summary.Claude, "Claude", Preferences.ClaudeBudget);
             long unknown = summary.Codex.UnpricedTokens + summary.Claude.UnpricedTokens;
@@ -301,7 +380,7 @@ namespace GlassPulse
             Get<TextBlock>("StatusText").ToolTip = string.Format("已发现 {0} 份日志 · 更新于 {1:HH:mm:ss} · {2} 个读取问题", summary.Files, summary.RefreshedAt.ToLocalTime(), summary.Errors);
             Get<Ellipse>("LiveDot").Fill = new SolidColorBrush(unknown > 0 || summary.Errors > 0 ? Color.FromRgb(237, 190, 144) : Color.FromRgb(166, 232, 203));
             Get<TextBlock>("TotalTokens").Text = Format.Tokens(summary.Codex.Tokens + summary.Claude.Tokens);
-            Get<TextBlock>("TotalCost").Text = (unknown > 0 ? "≥ " : "") + Format.Money(summary.Codex.Cost + summary.Claude.Cost);
+            Get<TextBlock>("TotalCost").Text = unknown > 0 && unknown == summary.Codex.Tokens + summary.Claude.Tokens ? "待定价" : (unknown > 0 ? "≥ " : "") + Format.Money(summary.Codex.Cost + summary.Claude.Cost);
             long prompt = summary.Codex.Input + summary.Claude.Input + summary.Codex.CacheRead + summary.Claude.CacheRead + summary.Codex.CacheWrite + summary.Claude.CacheWrite;
             Get<TextBlock>("CacheRatio").Text = (prompt == 0 ? 0 : 100d * (summary.Codex.CacheRead + summary.Claude.CacheRead) / prompt).ToString("0.#") + "%";
             Get<TextBlock>("RequestCount").Text = (summary.Codex.Requests + summary.Claude.Requests).ToString("N0");
@@ -309,6 +388,10 @@ namespace GlassPulse
             Get<TextBlock>("CacheDetail").Text = Format.Tokens(summary.Codex.CacheRead + summary.Claude.CacheRead);
             Get<TextBlock>("WriteDetail").Text = Format.Tokens(summary.Codex.CacheWrite + summary.Claude.CacheWrite);
             Get<TextBlock>("OutputDetail").Text = Format.Tokens(summary.Codex.Output + summary.Claude.Output);
+            Get<TextBlock>("HistoryInfo").Text = "可用记录自：" +
+                (Preferences.Providers != "claude" ? "Codex " + (summary.Codex.FirstDate ?? "暂无") : "") +
+                (Preferences.Providers == "all" ? "  ·  " : "") +
+                (Preferences.Providers != "codex" ? "Claude " + (summary.Claude.FirstDate ?? "暂无") : "");
             Get<TextBlock>("ResetText").Text = "下一周 " + summary.End.ToString("MM.dd") + " 00:00 · 本地时间";
             string[] missing = summary.Codex.UnknownModels.Keys.Concat(summary.Claude.UnknownModels.Keys).Distinct().ToArray();
             string warning = missing.Length > 0 ? "待定价：" + string.Join("、", missing) + "。token 已计入，金额仅包含已知价格。" : "";
@@ -331,13 +414,13 @@ namespace GlassPulse
         {
             string tokens = Format.Tokens(summary.Tokens) + " tokens";
             string partial = summary.UnpricedTokens > 0 ? "≥ " : "";
-            string money = partial + Format.Money(summary.Cost);
+            string money = summary.UnpricedTokens > 0 && summary.UnpricedTokens == summary.Tokens ? "待定价" : partial + Format.Money(summary.Cost);
             Get<TextBlock>(prefix + "Tokens").Text = tokens;
             Get<TextBlock>(prefix + "Tokens").ToolTip = summary.Tokens.ToString("N0") + " tokens · " + summary.Requests + " 条去重记录（含缓存）";
             Get<TextBlock>(prefix + "Cost").Text = money;
             decimal percentage = budget > 0 ? summary.Cost / budget * 100 : 0;
-            Get<TextBlock>(prefix + "Budget").Text = "自定周预算 " + Format.Money(budget) + " · " + partial + percentage.ToString("0.#", CultureInfo.InvariantCulture) + "%";
-            Get<TextBlock>(prefix + "Budget").ToolTip = "相对自己设置的 API 等值预算；套餐剩余额度需查看官方用量页。";
+            Get<Button>(prefix + "Budget").Content = budget <= 0 ? "设置周预算  ↗" : "周预算 " + Format.Money(budget) + " · " + partial + percentage.ToString("0.#", CultureInfo.InvariantCulture) + "%  · 修改";
+            Get<Button>(prefix + "Budget").ToolTip = "相对自己设置的 API 等值预算；套餐剩余额度需查看官方用量页。";
             SetBar(Get<ProgressBar>(prefix + "Bar"), (double)Math.Min(100, percentage));
             SetBar(Get<ProgressBar>("Mini" + prefix + "Bar"), (double)Math.Min(100, percentage));
             Get<TextBlock>("Mini" + prefix + "Cost").Text = money;
@@ -373,7 +456,7 @@ namespace GlassPulse
         {
             StringBuilder csv = new StringBuilder("date,provider,tokens,standard_api_usd,week_unpriced_tokens\r\n");
             for (int day = 0; day < 7; day++)
-                foreach (ProviderSummary provider in new[] { week.Codex, week.Claude })
+                foreach (ProviderSummary provider in new[] { week.Codex, week.Claude }.Where(p => week.Providers == null || week.Providers == "all" || p.Provider == week.Providers))
                     csv.AppendFormat(CultureInfo.InvariantCulture, "{0:yyyy-MM-dd},{1},{2},{3:0.000000},{4}\r\n",
                         week.Start.AddDays(day), provider.Provider, provider.DailyTokens[day], provider.DailyCosts[day], provider.UnpricedTokens);
             File.WriteAllText(path, csv.ToString(), new UTF8Encoding(true));
@@ -389,15 +472,17 @@ namespace GlassPulse
             catch (UnauthorizedAccessException) { MessageBox.Show(this, "没有权限写入这个位置。", "GlassPulse"); }
         }
 
-        private void OpenSettings()
+        private void OpenSettings() { OpenSettings(null); }
+        private void OpenSettings(string focusBudget)
         {
             Preferences.ClickThrough = false;
             if (!demo) NativeGlass.SetClickThrough(this, false);
             Show();
-            SettingsWindow dialog = new SettingsWindow(Preferences, dataDirectory, pricePath, demo) { Owner = this };
+            string oldCodexRoot = Preferences.CodexRoot, oldClaudeRoot = Preferences.ClaudeRoot;
+            SettingsWindow dialog = new SettingsWindow(Preferences, dataDirectory, pricePath, demo, focusBudget) { Owner = this };
             if (dialog.ShowDialog() == true)
             {
-                engine = null;
+                if (oldCodexRoot != Preferences.CodexRoot || oldClaudeRoot != Preferences.ClaudeRoot) engine = null;
                 ApplyAppearance();
                 Save();
                 if (!demo) { StartTimer(); Refresh(); }
@@ -424,6 +509,11 @@ namespace GlassPulse
             long[] codex = { 1200000, 2410000, 850000, 1780000, 1310000, 620000, 250000 };
             long[] claude = { 720000, 1510000, 480000, 980000, 860000, 430000, 180000 };
             value.Codex.DailyTokens = codex; value.Claude.DailyTokens = claude;
+            value.Codex.FirstDate = value.Claude.FirstDate = "2026-09-07";
+            value.Codex.ModelTokens["gpt-6.1-sol"] = 6800000;
+            value.Codex.ModelTokens["gpt-6-sol"] = 1620000;
+            value.Claude.ModelTokens["claude-opus-5-5"] = 3560000;
+            value.Claude.ModelTokens["claude-sonnet-5-5"] = 1600000;
             value.Codex.Requests = 184; value.Claude.Requests = 126;
             value.ModelTokens["gpt-6.1-sol"] = 6800000;
             value.ModelTokens["claude-opus-5-5"] = 3560000;

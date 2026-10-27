@@ -17,6 +17,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - name: Check public content
+        shell: pwsh
+        run: ./scripts/check-public-content.ps1
       - name: Build and run accounting scenarios
         shell: pwsh
         run: ./build.ps1 -Test
@@ -36,7 +39,7 @@ jobs:
       - name: Package
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '1.0.0' }
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { ([version](Get-Item ./dist/GlassPulse.exe).VersionInfo.ProductVersion).ToString(3) }
           ./package.ps1 -SkipBuild -Version $version
       - uses: actions/upload-artifact@v7
         with:

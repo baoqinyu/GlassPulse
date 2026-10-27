@@ -249,6 +249,34 @@ internal static class CoreTests
             string path = Path.Combine(root, "pricing.json"); File.WriteAllText(path, Encode(changed), Utf8); File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(10));
             Equal(.00188m, Refresh(engine).Codex.Cost);
         });
+        Run("Budgets start unset and retain explicit user amounts", delegate {
+            Equal(0m, new Settings().CodexBudget);
+            string root = Sandbox(); var settings = new Settings { CodexBudget = 100, ClaudeBudget = 275.5m, Theme = "light", Providers = "claude" };
+            settings.Save(root); var restored = Settings.Load(root);
+            Equal(100m, restored.CodexBudget); Equal(275.5m, restored.ClaudeBudget); Equal("light", restored.Theme); Equal("claude", restored.Providers);
+        });
+        Run("Legacy preset budget migrates without replacing custom values", delegate {
+            string root = Sandbox(); File.WriteAllText(Path.Combine(root,"settings.json"), Encode(new Settings { CodexBudget=100,ClaudeBudget=340,SchemaVersion=0 }), Utf8);
+            var restored=Settings.Load(root); Equal(0m,restored.CodexBudget); Equal(340m,restored.ClaudeBudget);
+        });
+        Run("Older Sol model pricing is available for historical usage", delegate {
+            decimal cost; Check(prices.TryCost(Record(1000000,"gpt-5.6-sol"),out cost),"Older model was not priced"); Equal(8m,cost);
+        });
+        Run("All historical weeks expose their original availability", delegate {
+            string root=Sandbox(); Write(CodexPath(root),Session(),Context("gpt-5.6-sol"),Modern(stamp:"2024-01-02T10:00:00Z"));
+            var engine=Engine(root);var current=Refresh(engine);Equal("2024-01-02",current.Codex.FirstDate);
+            var old=engine.Refresh(DateTimeOffset.Parse("2024-01-03T12:00:00Z"),TimeZoneInfo.Utc,1,0);Equal(1100L,old.Codex.Tokens);Check(old.Codex.Cost>0,"Historical price was lost");
+        });
+        Run("Provider selection filters totals, models and availability", delegate {
+            var c=Record(100);var a=Record(200,"claude-opus-5-5");a.Provider="claude";
+            var week=WeekClock.Aggregate(new[]{c,a},prices,Now,TimeZoneInfo.Utc,1,0);
+            week.Codex.FirstDate="2024-01-01"; week.Claude.FirstDate="2026-10-19";
+            Equal("2026-10-19",week.SelectProviders("claude").EarliestDate());
+            Equal("2024-01-01",week.SelectProviders("codex").EarliestDate());
+            var codex=week.SelectProviders("codex");Equal(100L,codex.Codex.Tokens);Equal(0L,codex.Claude.Tokens);Equal(1,codex.ModelTokens.Count);
+            var claude=week.SelectProviders("claude");Equal(0L,claude.Codex.Tokens);Equal(200L,claude.Claude.Tokens);Equal(1,claude.ModelTokens.Count);
+            Equal(300L,week.Codex.Tokens+week.Claude.Tokens);
+        });
         Console.WriteLine("RESULT " + passed + " passed, " + failed + " failed");
         return failed == 0 ? 0 : 1;
     }

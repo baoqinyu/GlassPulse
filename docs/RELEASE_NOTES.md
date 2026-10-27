@@ -1,27 +1,19 @@
-# GlassPulse 1.0.0
+# GlassPulse 1.1.0
 
-A native glass desktop meter for Codex and Claude Code weekly token usage and standard API-equivalent cost.
+- Fix the native rectangular blur outside the card by clipping the HWND to the same rounded region in every view.
+- Add light/dark glass and Codex-only / Claude-only / combined display.
+- Make weekly budgets directly editable and unset by default; preserve explicitly saved values.
+- Add direct selection of every available historical week, source availability dates, and missing historical Sol pricing. Fully unpriced usage now displays a clear label.
+- Keep source, screenshots and release packaging free of workstation-specific paths; screenshots use synthetic, path-free fixtures.
 
-- Compact meter and mini bar; double-click to open the dashboard.
-- Hourly/daily line chart, daily provider bars, model-share donut and cache statistics.
-- Token/USD chart modes, daily CSV export and calendar-week history.
-- Two-second incremental local refresh, duplicate-safe accounting and explicit missing-price notices.
-- Tray, drag/snap, opacity, topmost, mouse passthrough and optional Windows login startup.
-- English and Chinese documentation. MIT license. No API keys or application network requests.
-
-Windows 10/11 with .NET Framework 4.8. Download the single EXE or portable ZIP. The progress bars use self-defined weekly budgets; dollar values estimate standard API token prices.
+Validation: 40 accounting/configuration scenarios and 18 native window combinations, plus rendered UI and interaction checks. Native corner regression improved from 0/3 before the fix to 3/3, with both themes and provider modes also checked.
 
 ---
 
-原生玻璃风 Codex / Claude Code 每周 token 与标准 API 等值统计工具。
+- 修复圆角外的矩形模糊底板，所有视图同步裁剪实际窗口。
+- 新增浅色 / 深色，以及仅 Codex、仅 Claude、同时显示。
+- 预算可点击直接修改，默认不设上限，保留明确保存的自定义值。
+- 直接选择全部可用历史周，显示数据起始日期，补充旧 Sol 单价；全部未定价时明确提示。
+- 公开内容移除本机绝对路径示例；截图使用无路径的演示数据。
 
-- 默认收缩，支持极简横条；双击展开 dashboard。
-- 按小时／按日折线、每日柱状图、模型占比环图、缓存统计。
-- token／美元图表切换、每日汇总 CSV、自然周历史。
-- 默认 2 秒增量刷新，重复记录去重，缺失单价明确提示。
-- 托盘、拖动贴边、透明度、置顶、鼠标穿透、可选登录启动。
-- 中英文文档，MIT 许可证，无需 API Key，软件不发起网络请求。
-
-运行需要 Windows 10/11 和 .NET Framework 4.8。进度条按自定周预算计算；金额使用标准 API token 单价估算。
-
-Validation: 35 accounting/reader scenarios, warnings-as-errors build, rendered UI previews and native interaction checks. Screenshots use synthetic data.
+验证：40 个计数 / 配置场景、18 个原生窗口组合，以及界面渲染和交互检查。原生圆角回归检查由修复前 0/3 提升为 3/3。

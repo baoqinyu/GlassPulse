@@ -34,6 +34,8 @@ namespace GlassPulse
     public sealed class ProviderSummary
     {
         public string Provider { get; set; }
+        public string FirstDate { get; set; }
+        public Dictionary<string, long> ModelTokens { get; set; }
         public long Input { get; set; }
         public long CacheRead { get; set; }
         public long CacheWrite { get; set; }
@@ -51,6 +53,7 @@ namespace GlassPulse
         public ProviderSummary(string provider)
         {
             Provider = provider;
+            ModelTokens = new Dictionary<string, long>();
             UnknownModels = new Dictionary<string, long>();
             DailyTokens = new long[7];
             DailyCosts = new decimal[7];
@@ -80,6 +83,29 @@ namespace GlassPulse
             ModelTokens = new Dictionary<string, long>();
         }
 
+        public string Providers { get; set; }
+        public WeekSummary SelectProviders(string providers)
+        {
+            WeekSummary result = Copy();
+            result.Providers = providers;
+            if (providers == "codex")
+            {
+                result.Claude = new ProviderSummary("claude");
+                result.ModelTokens = new Dictionary<string, long>(Codex.ModelTokens);
+                result.SourceWarning = (SourceWarning ?? "").Replace("未找到 Claude Code 日志。", "");
+            }
+            else if (providers == "claude")
+            {
+                result.Codex = new ProviderSummary("codex");
+                result.ModelTokens = new Dictionary<string, long>(Claude.ModelTokens);
+                result.SourceWarning = (SourceWarning ?? "").Replace("未找到 Codex 日志。", "");
+            }
+            return result;
+        }
+        public string EarliestDate()
+        {
+            return new[] { Codex.FirstDate, Claude.FirstDate }.Where(x => !string.IsNullOrEmpty(x)).OrderBy(x => x).FirstOrDefault();
+        }
         public WeekSummary Copy() { return (WeekSummary)MemberwiseClone(); }
     }
 
@@ -113,6 +139,8 @@ namespace GlassPulse
                 long modelTokens;
                 week.ModelTokens.TryGetValue(model, out modelTokens);
                 week.ModelTokens[model] = modelTokens + record.Total;
+                summary.ModelTokens.TryGetValue(model, out modelTokens);
+                summary.ModelTokens[model] = modelTokens + record.Total;
                 summary.Requests++;
                 if (record.EstimatedCacheTtl) summary.EstimatedCacheTtl++;
                 decimal cost;

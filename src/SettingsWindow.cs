@@ -19,7 +19,7 @@ namespace GlassPulse
         private readonly string pricePath;
         private readonly bool demo;
         private const string StartupKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-        internal SettingsWindow(Settings settings, string dataDirectory, string pricePath, bool demo)
+        internal SettingsWindow(Settings settings, string dataDirectory, string pricePath, bool demo, string focusBudget = null)
         {
             preferences = settings;
             this.dataDirectory = dataDirectory;
@@ -35,6 +35,11 @@ namespace GlassPulse
             using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("GlassPulse.Settings.xaml"))
                 view = (Grid)XamlReader.Load(stream);
             Content = view;
+            Theme.Apply(view, settings.Theme == "light");
+            Background = (Brush)view.Resources["SettingsSurface"];
+            Get<ComboBox>("ThemeInput").SelectedIndex = settings.Theme == "light" ? 1 : 0;
+            Get<ComboBox>("ProvidersInput").SelectedIndex = settings.Providers == "codex" ? 1 : settings.Providers == "claude" ? 2 : 0;
+            if (focusBudget != null) Loaded += delegate { var input = Get<TextBox>(focusBudget + "BudgetInput"); input.Focus(); input.SelectAll(); };
             if (!demo && !NativeGlass.HotkeyAvailable) Get<TextBlock>("HotkeyHint").Text = "快捷键不可用 · 可从托盘唤回";
             Get<TextBox>("CodexBudgetInput").Text = settings.CodexBudget.ToString(CultureInfo.InvariantCulture);
             Get<TextBox>("ClaudeBudgetInput").Text = settings.ClaudeBudget.ToString(CultureInfo.InvariantCulture);
@@ -81,9 +86,9 @@ namespace GlassPulse
             int seconds;
             if (!decimal.TryParse(Get<TextBox>("CodexBudgetInput").Text, NumberStyles.Number, CultureInfo.InvariantCulture, out codex) ||
                 !decimal.TryParse(Get<TextBox>("ClaudeBudgetInput").Text, NumberStyles.Number, CultureInfo.InvariantCulture, out claude) ||
-                codex < 1 || claude < 1 || codex > 100000000 || claude > 100000000)
+                codex < 0 || claude < 0 || codex > 100000000 || claude > 100000000)
             {
-                Get<TextBlock>("ErrorText").Text = "请输入 1 至 100,000,000 之间的周预算（美元）。";
+                Get<TextBlock>("ErrorText").Text = "请输入 0 至 100,000,000 之间的周预算，0 表示不设置上限。";
                 return;
             }
             if (!int.TryParse(Get<TextBox>("RefreshInput").Text, out seconds) || seconds < 1 || seconds > 60)
@@ -109,6 +114,8 @@ namespace GlassPulse
                         else key.DeleteValue("GlassPulse", false);
                     }
                 }
+                preferences.Theme = Get<ComboBox>("ThemeInput").SelectedIndex == 1 ? "light" : "dark";
+                preferences.Providers = Get<ComboBox>("ProvidersInput").SelectedIndex == 1 ? "codex" : Get<ComboBox>("ProvidersInput").SelectedIndex == 2 ? "claude" : "all";
                 preferences.CodexBudget = codex; preferences.ClaudeBudget = claude;
                 preferences.RefreshSeconds = seconds;
                 preferences.WeekStart = Get<ComboBox>("WeekStartInput").SelectedIndex == 0 ? 1 : 0;
