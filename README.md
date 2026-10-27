@@ -13,7 +13,7 @@ A glass desktop meter for **Codex and Claude Code tokens, weekly API-equivalent 
 - **Compact by default.** Double-click to open the dashboard. Mini mode becomes a narrow single-provider bar when only one tool is selected.
 - **Editable weekly budgets.** Click a budget label to edit it. Budgets start unset; zero means no budget cap. Without a cap the meter shows tokens and dollars while the budget bar stays empty.
 - **All available weeks.** Pick a week directly from the date dropdown. The local log timestamps determine the history range; each provider's earliest available date is shown in the dashboard.
-- **Native rounded outline.** The operating-system window and blur are clipped to the same rounded card, including after resizing, expanding and DPI changes. Transparent outer margins cannot become a rectangular blur plate.
+- **Native rounded outline.** The controls and a separate composition-only glass surface share the same rounded outline. Both visual and native clipping are synchronized while resizing, expanding, moving and hiding. The foreground does not use whole-window accent blur.
 - **Live local updates.** Two-second refresh by default, incremental after the initial scan. Values update when the coding tool writes a completed usage record.
 
 ![Light dashboard with demonstration data](assets/light-dashboard.png)
@@ -22,7 +22,7 @@ A glass desktop meter for **Codex and Claude Code tokens, weekly API-equivalent 
 
 Download the single `GlassPulse.exe` or portable ZIP from this repository's Releases section. Extract the ZIP before running. No installer, administrator rights or API key is required.
 
-Windows 10/11 and .NET Framework 4.8 are required. The executable uses the installed runtime and does not bundle a browser engine. Windows x64 is tested. Native blur depends on Windows composition; transparent rendering remains available when native blur is unavailable.
+Windows 10 version 1903 or later / Windows 11 and .NET Framework 4.8 are required. The executable uses the installed runtime and does not bundle a browser engine. Windows x64 is tested. Native blur depends on Windows composition; transparent rendering remains available when native blur is unavailable.
 
 | Action | Result |
 | --- | --- |
@@ -82,4 +82,4 @@ Developer switches: `--preview <directory>` renders synthetic previews; `--smoke
 
 [ccusage](https://github.com/ccusage/ccusage) provides CLI reports; [codex-bar](https://github.com/jspann21/codex-bar) focuses on Codex capacity; [CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) integrates provider quotas with the Windows taskbar. GlassPulse uses its own native implementation.
 
-[MIT license](LICENSE).
+[MIT license](LICENSE).\nActual desktop-pixel regression: `./scripts/test-pixel-edges.ps1` compares all exterior pixels against a generated checkerboard in 24 theme/provider/view/movement cases. It checks that glass composition is active and does not read or save personal desktop content. A runner without a visible synthetic desktop is reported unavailable, not passed. Material composition uses Windows components already installed; unsupported composition falls back to transparency.\n

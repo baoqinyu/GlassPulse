@@ -1,19 +1,15 @@
-# GlassPulse 1.1.0
+# GlassPulse 1.1.1
 
-- Fix the native rectangular blur outside the card by clipping the HWND to the same rounded region in every view.
-- Add light/dark glass and Codex-only / Claude-only / combined display.
-- Make weekly budgets directly editable and unset by default; preserve explicitly saved values.
-- Add direct selection of every available historical week, source availability dates, and missing historical Sol pricing. Fully unpriced usage now displays a clear label.
-- Keep source, screenshots and release packaging free of workstation-specific paths; screenshots use synthetic, path-free fixtures.
+Fix the remaining rectangular backdrop in real desktop rendering. Native window-region checks alone did not catch the compositor painting outside the card in 1.1.0.
 
-Validation: 40 accounting/configuration scenarios and 18 native window combinations, plus rendered UI and interaction checks. Native corner regression improved from 0/3 before the fix to 3/3, with both themes and provider modes also checked.
+The glass material now uses a dedicated, rounded composition visual behind the controls. Its visual clip and native boundary are synchronized during expansion, resizing, movement and show/hide. The previous unbounded accent blur is disabled on the foreground. Unsupported material composition falls back to transparency.
+
+Validation includes 40 accounting/configuration cases, 18 native-window checks, synthetic screen-pixel comparisons across themes/providers/views/movement, and checks that real material composition is active. No personal desktop content, paths or usage is included in diagnostics intended for publication.
 
 ---
 
-- 修复圆角外的矩形模糊底板，所有视图同步裁剪实际窗口。
-- 新增浅色 / 深色，以及仅 Codex、仅 Claude、同时显示。
-- 预算可点击直接修改，默认不设上限，保留明确保存的自定义值。
-- 直接选择全部可用历史周，显示数据起始日期，补充旧 Sol 单价；全部未定价时明确提示。
-- 公开内容移除本机绝对路径示例；截图使用无路径的演示数据。
+修复实屏中仍存在的矩形底板。1.1.0 的窗口区域测试未能发现合成器在圆角外绘制背景的问题。
 
-验证：40 个计数 / 配置场景、18 个原生窗口组合，以及界面渲染和交互检查。原生圆角回归检查由修复前 0/3 提升为 3/3。
+玻璃材质改为界面后方的独立圆角合成层，并同步其视觉裁剪与原生边界。展开、缩放、移动、隐藏和恢复时同步更新；前景不再启用整窗矩形模糊。不支持材质合成时回退为透明显示。
+
+验证包括 40 个计数 / 配置场景、18 个窗口检查，以及主题、工具、视图和移动状态的合成背景屏幕像素对比，确认真实玻璃材质已启用。公开诊断不包含个人桌面、本机路径或实际用量。

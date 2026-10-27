@@ -13,7 +13,7 @@
 - **默认收缩**：双击展开 dashboard。迷你模式选择单个工具后会缩短为单条。
 - **自由设置周预算**：点击预算文字直接修改。默认不设上限，0 表示不设置预算；此时仍显示 token 和金额，预算进度条留空。
 - **直接选择历史周**：日期下拉框列出本地日志覆盖的全部周，面板注明各工具最早可用日期。
-- **原生圆角边界**：窗口本身和模糊层使用相同圆角轮廓，展开、缩放和 DPI 改变后同步更新，防止透明边缘变成矩形底板。
+- **原生圆角边界**：界面和独立的玻璃合成层共用圆角轮廓，展开、缩放、移动、隐藏时同步视觉与原生裁剪，前景不再使用整窗矩形模糊。
 - **默认 2 秒刷新**：首次扫描后仅读取新增部分；编码工具写入用量记录后更新显示。
 
 ![浅色面板，全部为演示数据](assets/light-dashboard.png)
@@ -22,7 +22,7 @@
 
 从本仓库 Releases 下载 `GlassPulse.exe`，或下载便携 ZIP 并解压后运行。免安装，不需要管理员权限或 API Key。
 
-需要 Windows 10/11 和 .NET Framework 4.8，使用已有运行库，不捆绑浏览器内核。已验证 Windows x64。原生模糊取决于 Windows 合成器，模糊不可用时仍保留透明显示。
+需要 Windows 10 1903 或更新版本 / Windows 11 和 .NET Framework 4.8，使用已有运行库，不捆绑浏览器内核。已验证 Windows x64。原生模糊取决于 Windows 合成器，模糊不可用时仍保留透明显示。
 
 | 操作 | 功能 |
 | --- | --- |
@@ -82,4 +82,4 @@
 
 [ccusage](https://github.com/ccusage/ccusage) 适合 CLI 报告，[codex-bar](https://github.com/jspann21/codex-bar) 侧重 Codex 周容量，[CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) 提供任务栏额度集成。GlassPulse 使用自己的原生实现。
 
-[MIT 许可证](LICENSE)。
+[MIT 许可证](LICENSE)。\n实屏像素回归：`./scripts/test-pixel-edges.ps1` 使用生成的棋盘背景，对主题、工具、视图和移动状态共 24 种组合逐像素检查边缘，并确认玻璃合成已启用，不保存个人桌面。不具备可见测试桌面的环境会报告无法检测，不会算作通过。材质使用 Windows 已有组件，不支持时回退为透明。\n

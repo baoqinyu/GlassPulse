@@ -13,6 +13,15 @@ New-Item -ItemType Directory -Force -Path $distDirectory, $buildDirectory | Out-
 $coreFiles = @('Json.cs','Usage.cs','Pricing.cs','LogReader.cs','Settings.cs') | ForEach-Object { Join-Path $repoRoot "src\$_" }
 $references = @('PresentationCore.dll','PresentationFramework.dll','WindowsBase.dll') | ForEach-Object { '/r:' + (Join-Path $frameworkRoot "WPF\$_") }
 $references += @('/r:System.Xaml.dll','/r:System.Web.Extensions.dll','/r:System.Windows.Forms.dll','/r:System.Drawing.dll')
+$metadataRoot = Join-Path $env:WINDIR 'System32\WinMetadata'
+$runtimeFacadeRoot = Join-Path $env:WINDIR 'Microsoft.NET\assembly\GAC_MSIL\System.Runtime'
+$runtimeFacade = Get-ChildItem -LiteralPath $runtimeFacadeRoot -Filter 'System.Runtime.dll' -Recurse | Select-Object -First 1 -ExpandProperty FullName
+$references += @('/r:System.Numerics.dll',
+    ('/r:' + (Join-Path $frameworkRoot 'System.Numerics.Vectors.dll')),
+    ('/r:' + (Join-Path $frameworkRoot 'System.Runtime.WindowsRuntime.dll')),
+    ('/r:' + (Join-Path $metadataRoot 'Windows.Foundation.winmd')),
+    ('/r:' + (Join-Path $metadataRoot 'Windows.UI.winmd')),
+    ('/r:' + $runtimeFacade))
 $sourceFiles = Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src') -Filter '*.cs' | Select-Object -ExpandProperty FullName
 $exePath = Join-Path $distDirectory 'GlassPulse.exe'
 $arguments = @('/nologo','/utf8output','/warnaserror+','/optimize+','/target:winexe','/platform:anycpu',"/out:$exePath",
