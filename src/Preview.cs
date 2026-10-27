@@ -44,7 +44,7 @@ namespace GlassPulse
             DrawingVisual stage = new DrawingVisual();
             using (DrawingContext dc = stage.RenderOpen())
             {
-                dc.DrawRectangle(new LinearGradientBrush(Color.FromRgb(19, 33, 41), Color.FromRgb(34, 30, 43), 30), null, new Rect(0, 0, 1500, 1040));
+                dc.DrawRectangle(new LinearGradientBrush(Color.FromRgb(19, 33, 41), Color.FromRgb(34, 30, 43), 30), null, new Rect(0, 0, 1500, 1100));
                 var mintGlow = new RadialGradientBrush(Color.FromArgb(70, 99, 189, 153), Colors.Transparent);
                 var peachGlow = new RadialGradientBrush(Color.FromArgb(55, 196, 137, 104), Colors.Transparent);
                 dc.DrawEllipse(mintGlow, null, new Point(240, 340), 360, 310);
@@ -60,14 +60,24 @@ namespace GlassPulse
                 dc.DrawImage(mini, new Rect(58, 565, mini.PixelWidth / 2d, mini.PixelHeight / 2d));
                 DrawText(dc, "双击展开 dashboard · 简洁与细节，随时切换", 12, Color.FromRgb(163, 186, 180), 83, 523);
                 DrawText(dc, "极简横条", 11, Color.FromRgb(163, 186, 180), 81, 663);
-                DrawText(dc, "WINDOWS 10 / 11     ·     无浏览器内核     ·     MIT 开源", 11, Color.FromRgb(163, 182, 179), 76, 973);
-                DrawText(dc, "界面预览 · 演示数据", 10, Color.FromRgb(143, 159, 158), 1280, 975);
+                DrawText(dc, "WINDOWS 10 / 11     ·     无浏览器内核     ·     MIT 开源", 11, Color.FromRgb(163, 182, 179), 76, 1043);
+                DrawText(dc, "界面预览 · 演示数据", 10, Color.FromRgb(143, 159, 158), 1280, 1045);
             }
-            RenderTargetBitmap hero = new RenderTargetBitmap(3000, 2080, 192, 192, PixelFormats.Pbgra32);
+            RenderTargetBitmap hero = new RenderTargetBitmap(3000, 2200, 192, 192, PixelFormats.Pbgra32);
             hero.Render(stage);
             Save(hero, Path.Combine(directory, "preview.png"));
 
-            SettingsWindow settings = new SettingsWindow(new Settings { CodexRoot = "[demo directory]", ClaudeRoot = "[demo directory]" }, dataDirectory, pricePath, true) { ShowInTaskbar = false };
+            widget.Preferences.Mini = false; widget.Preferences.Expanded = true;
+            widget.Preferences.Theme = "light"; widget.ApplyAppearance();
+            Save(Render(widget.View), Path.Combine(directory, "light-dashboard.png"));
+            widget.Preferences.Expanded = false; widget.ApplyAppearance();
+            Save(Render(widget.View), Path.Combine(directory, "light-compact.png"));
+            widget.Preferences.Mini = true; widget.Preferences.Providers = "codex"; widget.ApplyAppearance();
+            Save(Render(widget.View), Path.Combine(directory, "codex-only.png"));
+            widget.Preferences.Providers = "claude"; widget.ApplyAppearance();
+            Save(Render(widget.View), Path.Combine(directory, "claude-only.png"));
+            widget.Preferences.Theme = "dark"; widget.Preferences.Providers = "all";
+            SettingsWindow settings = new SettingsWindow(new Settings { CodexRoot = "[demo directory]", ClaudeRoot = "[demo directory]", CodexBudget = 100, ClaudeBudget = 100 }, dataDirectory, pricePath, true) { ShowInTaskbar = false };
             settings.Show(); settings.UpdateLayout();
             Save(Render((FrameworkElement)settings.Content), Path.Combine(directory, "settings.png"));
             settings.Close();

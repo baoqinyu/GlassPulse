@@ -11,7 +11,8 @@
     "https://developers.openai.com/api/docs/models/gpt-5.6-luna",
     "https://developers.openai.com/api/docs/models/gpt-5.4",
     "https://developers.openai.com/api/docs/models/gpt-5.2-codex",
-    "https://platform.claude.com/docs/en/about-claude/pricing"
+    "https://platform.claude.com/docs/en/about-claude/pricing",
+    "https://developers.openai.com/api/docs/models/gpt-5.6-sol"
   ],
   "Models": [
     {
@@ -305,6 +306,20 @@
       "Output": 4,
       "WriteShort": 1,
       "WriteLong": 1.6
+    },
+    {
+      "Model": "gpt-5.6-sol",
+      "Input": 4,
+      "Cached": 0.4,
+      "Output": 20,
+      "WriteShort": 5,
+      "WriteLong": 0,
+      "LongContextThreshold": 272000,
+      "LongInput": 8,
+      "LongCached": 0.8,
+      "LongOutput": 30,
+      "LongWriteShort": 10,
+      "LongWriteLong": 0
     }
   ]
 }

@@ -2,124 +2,84 @@
 
 [简体中文](README.zh-CN.md) · English
 
-A small glass desktop meter for your coding week. Track **Codex + Claude Code tokens and their standard API dollar equivalent**, then double-click to unfold the dashboard.
+A glass desktop meter for **Codex and Claude Code tokens, weekly API-equivalent cost, and expandable analytics**.
 
-![GlassPulse compact meter, dashboard and mini bar. All values are demonstration data.](assets/preview.png)
+![Synthetic-data desktop preview](assets/preview.png)
 
-## A quiet meter, with detail when you need it
+## Choose how it looks and what it shows
 
-- **Compact by default.** Two progress bars, mint for Codex and peach for Claude. An optional mini bar takes even less room.
-- **Double-click to expand.** Hourly or daily line charts, daily grouped bars, a model-share donut, cache reuse and token breakdowns. Switch the time charts between tokens and USD; hover for values.
-- **Calendar weeks.** Local time, Monday or Sunday start, automatic rollover and up to 52 selectable weeks while the source logs remain available.
-- **Live local updates.** A two-second refresh by default; only new log bytes are read after the first scan. Usage appears after the coding tool writes its completed usage record.
-- **Native Windows.** C# / WPF on .NET Framework 4.8. No Electron, WebView, Node.js or background web server in the running application. The executable is about 150 KB; Windows supplies the runtime.
-- **Desktop controls.** Drag, edge snap, always on top, adjustable glass opacity, tray, optional mouse passthrough and optional login startup. `Ctrl+Alt+G` shows/hides the meter when the shortcut is available.
-- **Offline and private.** The application makes no network requests, requests no API keys and stores no conversation copies. Export the selected week's daily aggregates as CSV.
+- **Dark and light glass.** Switch with the sun button or in Settings. The meter, dashboard and settings share the selected palette.
+- **Codex, Claude, or both.** Choose the tools in Settings or the right-click menu. Visible rows, charts, totals and CSV exports follow the selection.
+- **Compact by default.** Double-click to open the dashboard. Mini mode becomes a narrow single-provider bar when only one tool is selected.
+- **Editable weekly budgets.** Click a budget label to edit it. Budgets start unset; zero means no budget cap. Without a cap the meter shows tokens and dollars while the budget bar stays empty.
+- **All available weeks.** Pick a week directly from the date dropdown. The local log timestamps determine the history range; each provider's earliest available date is shown in the dashboard.
+- **Native rounded outline.** The operating-system window and blur are clipped to the same rounded card, including after resizing, expanding and DPI changes. Transparent outer margins cannot become a rectangular blur plate.
+- **Live local updates.** Two-second refresh by default, incremental after the initial scan. Values update when the coding tool writes a completed usage record.
 
-The UI currently uses Simplified Chinese; the source and documentation are available in English and Chinese.
+![Light dashboard with demonstration data](assets/light-dashboard.png)
 
 ## Run
 
-Download `GlassPulse.exe` from this repository's Releases section, or build it below. Double-click the executable. There is no installer and administrator rights are not required.
+Download the single `GlassPulse.exe` or portable ZIP from this repository's Releases section. Extract the ZIP before running. No installer, administrator rights or API key is required.
 
-Requirements: Windows 10/11 with .NET Framework 4.8 and local Codex or Claude Code usage logs. Windows x64 is the tested configuration. Native blur depends on Windows composition; the translucent surface remains usable if blur is unavailable.
+Windows 10/11 and .NET Framework 4.8 are required. The executable uses the installed runtime and does not bundle a browser engine. Windows x64 is tested. Native blur depends on Windows composition; transparent rendering remains available when native blur is unavailable.
 
-| Interaction | Result |
+| Action | Result |
 | --- | --- |
 | Double-click the background | Expand/collapse the dashboard |
 | Double-click the mini bar | Open the dashboard |
-| Drag the background | Move and snap near a screen edge |
-| Gear button / right-click / tray | Settings and view options |
-| `‹` / `›` | Browse weeks |
-| `−` or `Esc` | Hide to tray; collection continues |
-| `Ctrl+Alt+G` | Show/hide; also restores mouse interaction |
+| Click a budget label | Edit that provider's budget |
+| Sun button | Switch light/dark glass |
+| Date dropdown | Select any available historical week |
+| Right-click / Settings | Choose Codex, Claude, or both; change appearance |
+| Drag the background | Move; snap near screen edges |
+| `−` / `Esc` | Hide to tray; collection continues |
+| `Ctrl+Alt+G` | Show/hide and restore mouse interaction when the shortcut is available |
 | Tray → Restore mouse interaction | Recover from passthrough or a shortcut conflict |
 | `F5` | Refresh now |
 | Tray → Exit | Quit completely |
 
-### What the bars and dollars mean
+## Analytics and accounting
 
-Each bar shows **priced usage / your own weekly API-equivalent budget**. The default budget is $100 per provider, adjustable in Settings. A value above 100% keeps the bar full and displays the actual percentage.
+The dashboard has hourly/daily lines, daily grouped bars, a model-token donut, cache reuse and token breakdowns. Switch the time charts between tokens and USD. Hover for values, and export the selected providers' daily aggregates as CSV.
 
-The bars do not represent an official subscription quota. Dollars are a **standard, global API token-price estimate**, not the amount charged for your subscription. Fast/priority premiums, regional premiums, tool calls, taxes, discounts and provider-specific billing adjustments are excluded. Supported long-context tiers are applied per recorded request.
+Each budget bar represents **priced API-equivalent usage / your chosen weekly budget**. It is a personal budget indicator. Official subscription capacity must be checked with the provider.
 
-Unknown models retain their tokens. Their missing costs are disclosed and the priced subtotal is prefixed with `≥`. Old Claude logs without cache TTL details use the short cache-write rate and show an estimate notice. Reasoning tokens already included in output are counted once.
+Dollars use standard global API token prices, including supported cache and long-context categories. The active catalog revalues all selected weeks at its configured prices. Fast/priority premiums, regional premiums, tool calls, taxes and account discounts are excluded.
 
-### Data sources
+Unknown prices retain their tokens. Fully unpriced usage displays `待定价`; a partially priced total uses `≥`. Old Claude records without cache TTL use the short-write rate and show an estimate notice. Reasoning already included in output is counted once. Duplicate streamed Claude blocks and modern/legacy Codex records are reconciled.
 
-| Tool | Default source |
-| --- | --- |
-| Codex CLI / desktop sessions | `%USERPROFILE%\.codex\sessions\**\*.jsonl` |
-| Archived Codex sessions | `%USERPROFILE%\.codex\archived_sessions\**\*.jsonl` |
-| Claude Code, including subagent logs | `%USERPROFILE%\.claude\projects\**\*.jsonl` |
+## Local data and history
 
-`CODEX_HOME` and `CLAUDE_CONFIG_DIR` are honored as defaults. Override either tool's **home directory** in Settings. WSL logs can be selected by their accessible Windows path. Plain Claude web/desktop chats and activity on other devices or cloud hosts are only included if compatible usage logs are present in the selected directories.
+The app discovers the tools' normal home directories. `CODEX_HOME` and `CLAUDE_CONFIG_DIR` are honored. Settings can override either home directory. It reads Codex session and archived-session JSONL logs, and Claude Code project/subagent JSONL logs.
 
-Numbers are reconstructed from the available logs. Deleting logs removes their contribution; keeping them retains history. Malformed, inaccessible or missing sources are marked. The reader handles partial UTF-8 lines, active writers, appended files and truncation. Modern Codex response IDs and Claude message/request IDs prevent double counting; legacy Codex counters are reconciled with modern response records.
+History covers the logs still available locally. Plain web chats, other devices and cloud activity require compatible logs in the selected source. Deleted source logs cannot be reconstructed by the app. Missing sources and malformed records are marked; the earliest available date distinguishes missing history from zero usage.
 
-### Settings and prices
-
-Runtime configuration is stored in a `data` folder beside the executable. For example, `GlassPulse.exe` uses `data`; moving the application folder moves its configuration too. It does not install application data on the system drive:
-
-```text
-settings.json   # appearance, budgets, source directories and position
-pricing.json    # editable price snapshot; USD per million tokens
-```
-
-Settings → Edit price catalog opens your active `pricing.json`. Save the file and the next refresh revalues the loaded history. Invalid edits leave the last valid catalog active with a warning. The initial snapshot was checked on **2026-10-27** and contains 29 model entries. The app does not download price updates automatically; calendar weeks roll over automatically regardless of catalog updates. When upgrading the app, an existing user-edited catalog is preserved.
-
-Official sources: [OpenAI pricing](https://developers.openai.com/api/docs/pricing), [GPT-6.1 Sol context pricing](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [Claude pricing](https://platform.claude.com/docs/en/about-claude/pricing). All source URLs are also recorded in the catalog.
-
-For an alternate configuration directory:
+The portable `data` folder is created **beside the executable**, containing `settings.json` and `pricing.json`. Moving the application folder moves its configuration. No application-data installation on the system drive is required. An alternate relative data directory can be selected with:
 
 ```powershell
-.\GlassPulse.exe --data-dir "data"
+.\GlassPulse.exe --data-dir ".\my-data"
 ```
 
-## Build and test
+The price catalog has 30 entries, checked on 2026-10-27. It is a local snapshot. Upgrades add missing bundled models while preserving existing edited rates; edit existing rates through Settings → Edit price catalog. Calendar weeks roll over automatically, and prices do not download automatically.
 
-On Windows, using Windows PowerShell 5.1 or PowerShell 7:
+Official sources: [OpenAI pricing](https://developers.openai.com/api/docs/pricing), [historical Sol pricing](https://developers.openai.com/api/docs/models/gpt-5.6-sol), [Claude pricing](https://platform.claude.com/docs/en/about-claude/pricing). Sources are also recorded in the catalog.
+
+## Privacy and building
+
+The application makes no network requests and does not persist conversation copies. Runtime configuration, local logs, databases, diagnostics and credentials are excluded from version control and release packaging. Public screenshots use synthetic data and path-free placeholders.
 
 ```powershell
 .\build.ps1 -Test
+.\package.ps1 -SkipBuild
 ```
 
-The script uses the Windows .NET Framework C# compiler. No SDK download, NuGet restore or paid service is required. Output: `dist\GlassPulse.exe`. Tests cover deduplication, incremental log reading, cache billing, model aliases, unknown prices, long context and DST/week boundaries.
+The Windows .NET Framework compiler is used without an SDK download or NuGet restore. The test command runs 40 accounting/configuration scenarios and 18 native-window combinations covering both themes, all provider selections and all three view modes.
 
-Generate previews using synthetic data:
+Developer switches: `--preview <directory>` renders synthetic previews; `--smoke` exercises the charts/settings; `--report <file>` writes local aggregate diagnostics. Use `--data-dir` to keep their output in a chosen portable folder. Diagnostic reports should stay private.
 
-```powershell
-$exe = (Resolve-Path .\dist\GlassPulse.exe).Path
-Start-Process $exe -ArgumentList '--preview build\preview --data-dir build\preview-data' -Wait
-Start-Process $exe -ArgumentList '--smoke --data-dir build\smoke-data' -Wait
-```
+## Related tools and license
 
-Use absolute output paths when running the commands from a different working directory. Preview files contain only demonstration data. `--report <path>` performs two scans and writes aggregate diagnostics to a local JSON file; diagnostics should stay private.
+[ccusage](https://github.com/ccusage/ccusage) provides CLI reports; [codex-bar](https://github.com/jspann21/codex-bar) focuses on Codex capacity; [CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) integrates provider quotas with the Windows taskbar. GlassPulse uses its own native implementation.
 
-## Project structure
-
-```text
-src/                 native UI, charts, log reader and accounting
-tests/CoreTests.cs   standalone accounting/reader scenario suite
-pricing.json         versioned price snapshot with official sources
-assets/              icon and synthetic-data screenshots
-docs/                specification and release notes
-build.ps1            dependency-free Windows build and tests
-package.ps1          portable ZIP and SHA-256 manifest
-publish.ps1          publish this new repository using an authenticated gh CLI
-.github/workflows/   Windows CI and tagged releases
-```
-
-## Related projects
-
-| Project | Useful if you prefer |
-| --- | --- |
-| [ccusage](https://github.com/ccusage/ccusage) | Rich CLI token/cost reports from local agent data |
-| [codex-bar](https://github.com/jspann21/codex-bar) | A small Windows widget focused on official Codex weekly capacity |
-| [CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) | A Windows taskbar companion with provider quota integrations |
-
-GlassPulse uses its own native implementation, focused on a glass floating meter and local token analytics. No source code from those projects is bundled.
-
-## License
-
-[MIT](LICENSE).
+[MIT license](LICENSE).

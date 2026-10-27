@@ -37,7 +37,29 @@ namespace GlassPulse
                     using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("GlassPulse.pricing.json"))
                     using (FileStream output = File.Create(pricePath)) stream.CopyTo(output);
                 }
+                try
+                {
+                    var active = PriceCatalog.Load(pricePath);
+                    PriceCatalog bundled;
+                    using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("GlassPulse.pricing.json"))
+                    using (var text = new StreamReader(stream)) bundled = Json.Serializer().Deserialize<PriceCatalog>(text.ReadToEnd());
+                    bool additions = false;
+                    foreach (var price in bundled.Models)
+                        if (!active.Models.Exists(x => string.Equals(x.Model, price.Model, StringComparison.OrdinalIgnoreCase)))
+                        { active.Models.Add(price); additions = true; }
+                    if (additions)
+                    {
+                        var sources = new System.Collections.Generic.List<string>(active.Sources ?? new string[0]);
+                        foreach (string source in bundled.Sources) if (!sources.Contains(source)) sources.Add(source);
+                        active.Sources = sources.ToArray();
+                        File.WriteAllText(pricePath, Json.Serializer().Serialize(active), new UTF8Encoding(false));
+                    }
+                }
+                catch (IOException) { }
+                catch (ArgumentException) { }
+                catch (InvalidOperationException) { }
                 Settings preferences = Settings.Load(dataDirectory);
+                if (demo) { preferences.CodexBudget = 100; preferences.ClaudeBudget = 100; }
                 if (reportPath != null)
                 {
                     Stopwatch watch = Stopwatch.StartNew();
@@ -104,15 +126,34 @@ namespace GlassPulse
                                     Settings fixtureSettings = new Settings();
                                     SettingsWindow settingsDialog = new SettingsWindow(fixtureSettings, dataDirectory, pricePath, true) { Owner = widget };
                                     settingsDialog.Loaded += delegate { settingsDialog.Dispatcher.BeginInvoke((Action)delegate {
-                                        settingsDialog.Get<System.Windows.Controls.TextBox>("CodexBudgetInput").Text = "0";
+                                        settingsDialog.Get<System.Windows.Controls.TextBox>("CodexBudgetInput").Text = "-1";
                                         settingsDialog.Get<System.Windows.Controls.Button>("SaveButton").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
                                         if (settingsDialog.Get<System.Windows.Controls.TextBlock>("ErrorText").Text.Length == 0)
-                                            throw new InvalidOperationException("Budget validation did not reject zero");
+                                            throw new InvalidOperationException("Budget validation did not reject negative input");
                                         settingsDialog.Get<System.Windows.Controls.TextBox>("CodexBudgetInput").Text = "240";
                                         settingsDialog.Get<System.Windows.Controls.Button>("SaveButton").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
                                     }); };
                                     if (settingsDialog.ShowDialog() != true || fixtureSettings.CodexBudget != 240)
                                         throw new InvalidOperationException("Settings save failed");
+                                    foreach (string provider in new[] { "codex", "claude", "all" })
+                                    {
+                                        widget.Preferences.Providers = provider;
+                                        widget.Preferences.Theme = "light";
+                                        widget.ApplyAppearance();
+                                        NativeGlass.ApplyBackdrop(widget, true, true);
+                                        if (provider == "codex" && widget.Get<System.Windows.Controls.StackPanel>("ClaudeRow").Visibility != Visibility.Collapsed)
+                                            throw new InvalidOperationException("Claude row was not hidden");
+                                        if (provider == "claude" && widget.Current.Codex.Tokens != 0)
+                                            throw new InvalidOperationException("Provider totals were not filtered");
+                                        WidgetWindow.WriteCsv(widget.Current, csvPath);
+                                        if (File.ReadAllLines(csvPath).Length != (provider == "all" ? 15 : 8))
+                                            throw new InvalidOperationException("CSV provider filtering failed");
+                                    }
+                                    if (widget.Get<System.Windows.Controls.ComboBox>("WeekSelector").Items.Count < 3)
+                                        throw new InvalidOperationException("Historical weeks were not discovered");
+                                    widget.Get<System.Windows.Controls.ComboBox>("WeekSelector").SelectedIndex = 3;
+                                    widget.Get<System.Windows.Controls.ComboBox>("WeekSelector").SelectedIndex = 0;
+                                    widget.Preferences.Theme = "dark"; widget.ApplyAppearance();
                                     widget.Hide(); widget.ToggleVisibility();
                                     NativeGlass.ApplyBackdrop(widget, true);
                                     NativeGlass.ApplyBackdrop(widget, false);

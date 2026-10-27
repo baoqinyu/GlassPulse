@@ -6,6 +6,9 @@ namespace GlassPulse
 {
     public sealed class Settings
     {
+        public int SchemaVersion { get; set; }
+        public string Theme { get; set; }
+        public string Providers { get; set; }
         public decimal CodexBudget { get; set; }
         public decimal ClaudeBudget { get; set; }
         public int RefreshSeconds { get; set; }
@@ -22,8 +25,10 @@ namespace GlassPulse
 
         public Settings()
         {
-            CodexBudget = 100;
-            ClaudeBudget = 100;
+            CodexBudget = 0;
+            ClaudeBudget = 0;
+            Theme = "dark";
+            Providers = "all";
             RefreshSeconds = 2;
             WeekStart = 1;
             GlassOpacity = 0.64;
@@ -43,8 +48,16 @@ namespace GlassPulse
             result.RefreshSeconds = Math.Max(1, Math.Min(60, result.RefreshSeconds));
             result.GlassOpacity = double.IsNaN(result.GlassOpacity) ? 0.64 : Math.Max(0.35, Math.Min(1, result.GlassOpacity));
             result.WeekStart = result.WeekStart == 0 ? 0 : 1;
-            result.CodexBudget = Math.Max(1, result.CodexBudget);
-            result.ClaudeBudget = Math.Max(1, result.ClaudeBudget);
+            if (result.SchemaVersion < 2)
+            {
+                if (result.CodexBudget == 100) result.CodexBudget = 0;
+                if (result.ClaudeBudget == 100) result.ClaudeBudget = 0;
+            }
+            result.SchemaVersion = 2;
+            result.Theme = result.Theme == "light" ? "light" : "dark";
+            if (result.Providers != "codex" && result.Providers != "claude") result.Providers = "all";
+            result.CodexBudget = Math.Max(0, result.CodexBudget);
+            result.ClaudeBudget = Math.Max(0, result.ClaudeBudget);
             if (string.IsNullOrWhiteSpace(result.CodexRoot) || string.IsNullOrWhiteSpace(result.ClaudeRoot))
                 throw new InvalidDataException("日志目录不能为空，请修正 settings.json");
             return result;
@@ -53,6 +66,7 @@ namespace GlassPulse
         public void Save(string dataDirectory)
         {
             Directory.CreateDirectory(dataDirectory);
+            SchemaVersion = 2;
             string path = Path.Combine(dataDirectory, "settings.json");
             string temporary = path + ".tmp";
             File.WriteAllText(temporary, Json.Serializer().Serialize(this), new UTF8Encoding(false));

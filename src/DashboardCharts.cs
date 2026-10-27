@@ -15,10 +15,16 @@ namespace GlassPulse
             Color.FromRgb(166, 232, 203), Color.FromRgb(244, 198, 166), Color.FromRgb(155, 190, 229),
             Color.FromRgb(195, 175, 224), Color.FromRgb(129, 192, 198)
         };
-        private static readonly Brush Muted = new SolidColorBrush(Color.FromRgb(167, 183, 182));
+        private static Brush Muted = new SolidColorBrush(Color.FromRgb(167, 183, 182));
 
+        private static Brush Primary = Brushes.WhiteSmoke;
         internal static void Draw(WidgetWindow window, WeekSummary week, bool hourly, bool dollars)
         {
+            Muted = (Brush)window.View.Resources["Muted"];
+            Primary = (Brush)window.View.Resources["PrimaryText"];
+            bool light = window.Preferences.Theme == "light";
+            Palette[0] = light ? Color.FromRgb(41,124,97) : Color.FromRgb(166,232,203);
+            Palette[1] = light ? Color.FromRgb(163,95,57) : Color.FromRgb(244,198,166);
             window.Get<TextBlock>("TrendTitle").Text = hourly ? "时段分布 · 一周累计" : "每日趋势";
             window.Get<Button>("TimeModeButton").Content = hourly ? "按时" : "按日";
             window.Get<Button>("MetricButton").Content = dollars ? "USD" : "Token";
@@ -62,6 +68,7 @@ namespace GlassPulse
             int count = data[0].Length;
             for (int provider = 0; provider < 2; provider++)
             {
+                if ((week.Providers == "codex" && provider == 1) || (week.Providers == "claude" && provider == 0)) continue;
                 PointCollection points = new PointCollection();
                 for (int i = 0; i < count; i++) points.Add(new Point(left + (right - left) * i / (count - 1), bottom - (bottom - top) * data[provider][i] / max));
                 Polyline line = new Polyline { Points = points, Stroke = new SolidColorBrush(Palette[provider]), StrokeThickness = 1.8,
@@ -95,6 +102,7 @@ namespace GlassPulse
                 double x = width * (day + .5) / 7 - 15;
                 for (int provider = 0; provider < 2; provider++)
                 {
+                    if ((week.Providers == "codex" && provider == 1) || (week.Providers == "claude" && provider == 0)) continue;
                     double height = data[provider][day] == 0 ? 2 : Math.Max(3, data[provider][day] / max * 53);
                     Rectangle bar = new Rectangle { Width = 12, Height = height, RadiusX = 3, RadiusY = 3,
                         Fill = new SolidColorBrush(Palette[provider]), Opacity = data[provider][day] == 0 ? .16 : .85,
@@ -155,7 +163,7 @@ namespace GlassPulse
                 Ellipse dot = new Ellipse { Width = 4, Height = 4, Fill = brush, HorizontalAlignment = HorizontalAlignment.Left };
                 row.Children.Add(dot);
                 string name = item.Key.Replace("claude-", "").Replace("gpt-", "");
-                TextBlock label = new TextBlock { Text = name, FontSize = 9, Foreground = Brushes.WhiteSmoke, TextTrimming = TextTrimming.CharacterEllipsis };
+                TextBlock label = new TextBlock { Text = name, FontSize = 9, Foreground = Primary, TextTrimming = TextTrimming.CharacterEllipsis };
                 Grid.SetColumn(label, 1); row.Children.Add(label);
                 TextBlock percentage = new TextBlock { Text = (fraction * 100).ToString("0") + "%", FontSize = 9, Foreground = Muted, TextAlignment = TextAlignment.Right };
                 Grid.SetColumn(percentage, 2); row.Children.Add(percentage);

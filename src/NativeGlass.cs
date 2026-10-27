@@ -3,6 +3,9 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Runtime.CompilerServices;
+using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace GlassPulse
 {
@@ -22,6 +25,16 @@ namespace GlassPulse
         private static extern bool RegisterHotKey(IntPtr handle, int id, uint modifiers, uint key);
         [DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr handle, int id);
+        [DllImport("gdi32.dll")] private static extern IntPtr CreateRoundRectRgn(int left, int top, int right, int bottom, int ellipseWidth, int ellipseHeight);
+        [DllImport("gdi32.dll")] private static extern bool DeleteObject(IntPtr handle);
+        [DllImport("user32.dll", SetLastError = true)] private static extern int SetWindowRgn(IntPtr window, IntPtr region, bool redraw);
+        private sealed class SurfaceState
+        {
+            public string Signature;
+            public bool Rounded, Expanded, Light;
+        }
+        private static readonly ConditionalWeakTable<Window, SurfaceState> Surfaces = new ConditionalWeakTable<Window, SurfaceState>();
+        private static SurfaceState Surface(Window window) { return Surfaces.GetValue(window, key => new SurfaceState()); }
         public static bool HotkeyAvailable { get; private set; }
         private const int HotkeyId = 0x4750;
 
@@ -36,26 +49,86 @@ namespace GlassPulse
             // Ctrl+Alt+G restores the widget even while its surface ignores mouse input.
             HotkeyAvailable = RegisterHotKey(handle, HotkeyId, 0x4000 | 0x0002 | 0x0001, 0x47);
             window.Closed += delegate { UnregisterHotKey(handle, HotkeyId); };
+            window.LayoutUpdated += delegate { RefreshSurface(window); };
+            window.Loaded += delegate { RefreshSurface(window); };
+            source.AddHook(delegate(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled) {
+                if (message == 0x02E0)
+                {
+                    Surface(window).Signature = null;
+                    window.Dispatcher.BeginInvoke((Action)delegate { RefreshSurface(window); }, DispatcherPriority.Loaded);
+                }
+                return IntPtr.Zero;
+            });
             ApplyBackdrop(window, false);
         }
 
-        public static void ApplyBackdrop(Window window, bool expanded)
+        private static bool ClipSurface(Window window, out bool changed)
         {
-            if (SystemParameters.HighContrast) return;
+            changed = false;
+            var root = window.Content as FrameworkElement;
+            var frame = root == null ? null : root.FindName("Frame") as Border;
+            var source = PresentationSource.FromVisual(window);
+            IntPtr handle = new WindowInteropHelper(window).Handle;
+            if (handle == IntPtr.Zero || source == null || frame == null || frame.ActualWidth <= 0 || frame.ActualHeight <= 0) return false;
+            Rect bounds = frame.TransformToAncestor(window).TransformBounds(new Rect(frame.RenderSize));
+            Matrix dpi = source.CompositionTarget.TransformToDevice;
+            int left = (int)Math.Round(bounds.Left * dpi.M11), top = (int)Math.Round(bounds.Top * dpi.M22);
+            int right = (int)Math.Ceiling(bounds.Right * dpi.M11), bottom = (int)Math.Ceiling(bounds.Bottom * dpi.M22);
+            double radius = frame.CornerRadius.TopLeft;
+            int ellipseX = (int)Math.Round(radius * 2 * dpi.M11), ellipseY = (int)Math.Round(radius * 2 * dpi.M22);
+            SurfaceState state = Surface(window);
+            string signature = string.Join(":", left, top, right, bottom, ellipseX, ellipseY);
+            if (signature == state.Signature) return state.Rounded;
+            IntPtr region = CreateRoundRectRgn(left, top, right, bottom, ellipseX, ellipseY);
+            if (region == IntPtr.Zero) { state.Rounded = false; return false; }
+            if (SetWindowRgn(handle, region, true) == 0)
+            {
+                DeleteObject(region); // Ownership transfers to Windows only on success.
+                state.Rounded = false;
+                return false;
+            }
+            // SetWindowRgn owns and frees this HRGN. The actual HWND and its blur now share the visible card outline.
+            state.Signature = signature;
+            state.Rounded = true;
+            changed = true;
+            return true;
+        }
+
+        private static void RefreshSurface(Window window)
+        {
+            bool changed;
+            if (!ClipSurface(window, out changed)) { SetAccent(window, 0, false); return; }
+            if (changed)
+            {
+                SurfaceState state = Surface(window);
+                SetAccent(window, SystemParameters.HighContrast ? 0 : state.Expanded ? 4 : 3, state.Light);
+            }
+        }
+
+        public static void ApplyBackdrop(Window window, bool expanded, bool light = false)
+        {
+            SurfaceState state = Surface(window);
+            state.Expanded = expanded; state.Light = light;
+            bool changed;
+            // Fail closed to visual transparency rather than enabling a rectangular native blur if clipping fails.
+            bool ready = ClipSurface(window, out changed);
+            SetAccent(window, ready && !SystemParameters.HighContrast ? (expanded ? 4 : 3) : 0, light);
+        }
+
+        private static void SetAccent(Window window, int mode, bool light)
+        {
             IntPtr handle = new WindowInteropHelper(window).Handle;
             if (handle == IntPtr.Zero) return;
             IntPtr memory = IntPtr.Zero;
             try
             {
-                // Acrylic adds a stronger frosted backdrop for the expanded dashboard.
-                AccentPolicy accent = new AccentPolicy { State = expanded ? 4 : 3, Flags = 2, Color = unchecked((int)0x662C231D) };
+                AccentPolicy accent = new AccentPolicy { State = mode, Flags = 2, Color = light ? unchecked((int)0x66F4F6F2) : unchecked((int)0x662C231D) };
                 int size = Marshal.SizeOf(accent);
                 memory = Marshal.AllocHGlobal(size);
                 Marshal.StructureToPtr(accent, memory, false);
                 CompositionData data = new CompositionData { Attribute = 19, Data = memory, Size = size };
                 SetWindowCompositionAttribute(handle, ref data);
             }
-            // The translucent WPF surface remains usable when a Windows build rejects native blur.
             catch (EntryPointNotFoundException) { }
             catch (DllNotFoundException) { }
             finally { if (memory != IntPtr.Zero) Marshal.FreeHGlobal(memory); }

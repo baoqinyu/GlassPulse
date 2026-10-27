@@ -9,3 +9,13 @@ settings.json
 usage-cache.json
 crash.log
 *.local.json
+
+*.jsonl
+*.sqlite*
+*.log
+*.dmp
+usage-history.json
+auth.json
+.credentials.json
+.env
+.env.*

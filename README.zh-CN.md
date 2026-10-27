@@ -2,124 +2,84 @@
 
 简体中文 · [English](README.md)
 
-一个轻巧的玻璃风桌面用量条，统计 **Codex + Claude Code 的 token 和标准 API 等值费用**。平时安静悬浮，双击展开 dashboard。
+玻璃风桌面用量条，统计 **Codex / Claude Code 的 token、每周 API 等值费用**，双击展开可视化面板。
 
-![GlassPulse 收缩视图、展开面板和极简横条；图中全部为演示数据。](assets/preview.png)
+![桌面预览，全部为演示数据](assets/preview.png)
 
-## 日常简洁，需要时展开
+## 外观与显示内容都可选择
 
-- **默认收缩。** Codex 薄荷绿、Claude 暖杏色，两条细进度条；还可切换极简横条。
-- **双击展开面板。** 按小时／按日的折线图、每日并列柱状图、模型占比环图，以及缓存复用比例和 token 分类。时间图可切换 token／美元，悬停查看数值。
-- **按自然周统计。** 使用电脑本地时区，周一或周日起算，跨周自动切换；源日志保留期间可浏览最近 52 周。
-- **实时本地更新。** 默认每 2 秒检查一次，首次扫描后仅读取新增日志；编码工具写入用量记录后才会显示。
-- **Windows 原生。** C# / WPF，使用系统的 .NET Framework 4.8，运行时不需要 Electron、WebView、Node.js 或后台网页服务。EXE 约 150 KB，运行库由 Windows 提供。
-- **桌面交互。** 拖动、贴边、置顶、玻璃浓度、托盘、可选鼠标穿透和登录启动；快捷键可用时，`Ctrl+Alt+G` 隐藏／唤回。
-- **离线使用。** 软件不发起网络请求，不需要 API Key，不另存对话副本；可导出所选周的每日汇总 CSV。
+- **浅色 / 深色玻璃**：点击太阳按钮，或在设置中切换。悬浮条、面板和设置页同步配色。
+- **仅 Codex、仅 Claude、同时显示**：通过设置或右键选择。数据行、图表、汇总和 CSV 均随选择变化。
+- **默认收缩**：双击展开 dashboard。迷你模式选择单个工具后会缩短为单条。
+- **自由设置周预算**：点击预算文字直接修改。默认不设上限，0 表示不设置预算；此时仍显示 token 和金额，预算进度条留空。
+- **直接选择历史周**：日期下拉框列出本地日志覆盖的全部周，面板注明各工具最早可用日期。
+- **原生圆角边界**：窗口本身和模糊层使用相同圆角轮廓，展开、缩放和 DPI 改变后同步更新，防止透明边缘变成矩形底板。
+- **默认 2 秒刷新**：首次扫描后仅读取新增部分；编码工具写入用量记录后更新显示。
 
-当前界面为简体中文，仓库提供中英文文档。
+![浅色面板，全部为演示数据](assets/light-dashboard.png)
 
-## 使用
+## 运行与操作
 
-从本仓库 Releases 下载 `GlassPulse.exe`，或按下文自行编译，双击即可运行。免安装，无需管理员权限。
+从本仓库 Releases 下载 `GlassPulse.exe`，或下载便携 ZIP 并解压后运行。免安装，不需要管理员权限或 API Key。
 
-运行环境：Windows 10 / 11、.NET Framework 4.8，以及本机 Codex 或 Claude Code 的用量日志。已验证 Windows x64。原生模糊效果取决于 Windows 合成器；模糊不可用时仍可显示半透明界面。
+需要 Windows 10/11 和 .NET Framework 4.8，使用已有运行库，不捆绑浏览器内核。已验证 Windows x64。原生模糊取决于 Windows 合成器，模糊不可用时仍保留透明显示。
 
 | 操作 | 功能 |
 | --- | --- |
-| 双击空白处 | 展开／收起 dashboard |
-| 双击极简横条 | 打开 dashboard |
-| 拖动空白处 | 移动，靠近屏幕边缘时贴边 |
-| 齿轮／右键／托盘 | 设置与视图选项 |
-| `‹` / `›` | 浏览历史周 |
-| `−` 或 `Esc` | 收起到托盘，继续统计 |
-| `Ctrl+Alt+G` | 隐藏／唤回，同时恢复鼠标交互 |
-| 托盘 → 恢复鼠标交互 | 鼠标穿透或快捷键冲突时恢复操作 |
+| 双击空白处 | 展开 / 收起 dashboard |
+| 双击迷你条 | 展开 dashboard |
+| 点击预算文字 | 修改对应工具的周预算 |
+| 太阳按钮 | 切换浅色 / 深色 |
+| 日期下拉框 | 选择任一可用历史周 |
+| 右键 / 设置 | 选择显示的工具、调整外观 |
+| 拖动空白处 | 移动并贴近屏幕边缘 |
+| `−` / `Esc` | 隐藏到托盘，继续统计 |
+| `Ctrl+Alt+G` | 快捷键可用时隐藏 / 唤回，并恢复鼠标交互 |
+| 托盘 → 恢复鼠标交互 | 退出鼠标穿透，或应对快捷键冲突 |
 | `F5` | 立即刷新 |
 | 托盘 → 退出 | 完全退出 |
 
-### 进度条与金额的含义
+## 图表与计价
 
-进度条计算方式是：**已定价的 API 等值用量 ÷ 自己设置的周预算**。Codex、Claude 默认分别为 $100，可在设置中修改。超过预算时进度条保持满格，文字显示实际百分比。
+面板包括按小时 / 按日折线、每日并列柱状图、模型 token 环图、缓存复用与 token 分类。时间图可切换 token / 美元，悬停查看数值，也可导出所选工具的每日汇总 CSV。
 
-这里显示的是自定预算进度。套餐官方剩余额度需要查看官方用量页。金额使用**标准、全球 API token 单价**折算，与订阅实付费用的计算口径不同，不包含极速／优先模式溢价、地区加价、工具调用费、税费、折扣或服务方其他账单调整。已支持的长上下文价格按单次请求判断。
+预算条计算方式为：**已定价的 API 等值用量 ÷ 自己设置的周预算**。套餐官方剩余额度需查看提供商的用量页。
 
-未知模型的 token 会保留，缺少的费用会明确提示，已知部分金额以 `≥` 开头。旧版 Claude 日志缺少缓存时长时，按短期缓存写入单价估算并提示。已包含在输出中的推理 token 只计算一次。
+金额按标准、全球 API token 单价折算，支持已列出的缓存和长上下文档位。当前价格表会用于重算所选历史周，不包含极速 / 优先模式、地区加价、工具费、税费或账户折扣。
 
-### 数据来源
+未知价格仍保留 token。全部未定价时显示「待定价」，部分已定价时金额带 `≥`。旧 Claude 日志未记录缓存时长时按短期缓存写入估算并提示。输出已经包含的推理 token 只计一次，并协调 Claude 重复块与 Codex 新旧重复记录。
 
-| 工具 | 默认目录 |
-| --- | --- |
-| Codex CLI／桌面会话 | `%USERPROFILE%\.codex\sessions\**\*.jsonl` |
-| Codex 已归档会话 | `%USERPROFILE%\.codex\archived_sessions\**\*.jsonl` |
-| Claude Code，含子代理日志 | `%USERPROFILE%\.claude\projects\**\*.jsonl` |
+## 本地数据与历史范围
 
-默认支持 `CODEX_HOME`、`CLAUDE_CONFIG_DIR` 环境变量，也可在设置中填写工具的**主目录**。WSL 日志可填写 Windows 能访问的路径。普通 Claude 网页／桌面聊天、其他设备或云端的活动，只有兼容的用量日志存在于所选目录时才会计入。
+自动发现工具主目录，支持 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`，也可在设置中指定主目录。读取 Codex 会话与归档 JSONL，以及 Claude Code 项目和子代理 JSONL。
 
-统计从现有日志重建：保留日志即可查看历史，删除日志会移除对应贡献。日志损坏、不可读或目录缺失会显示提示。读取器支持未写完的 UTF-8 行、正在追加的日志、文件截断和新会话发现；通过 Codex response ID、Claude message/request ID 去重，并协调新旧 Codex 记录，避免重复计算。
+历史范围取决于本机仍保留的日志。普通网页聊天、其他设备或云端活动，需要相应兼容日志才会计入。已删除的源日志无法凭空恢复。缺失数据源或异常记录会提示，面板中的最早可用日期可帮助区分「没有记录」与「用量为零」。
 
-### 配置与价格
-
-配置默认保存在程序旁的 `data` 文件夹。例如 `GlassPulse.exe` 使用 `data`，搬动整个程序文件夹即可带走配置，无需在系统盘安装应用数据：
-
-```text
-settings.json   # 预算、外观、目录和窗口位置
-pricing.json    # 可编辑价格快照，单位为美元／百万 token
-```
-
-在设置中点击「编辑价格表」，保存后会在下次刷新时重算已加载的历史。价格表无效时继续使用上次有效值并提示。初始单价核验日期为 **2026-10-27**，包含 29 个模型条目。软件不会自动联网更新单价；自然周会自动切换，不依赖价格表更新。升级 EXE 时会保留已经编辑过的用户价格表。
-
-官方来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing)、[GPT-6.1 Sol 上下文计价](https://developers.openai.com/api/docs/models/gpt-6.1-sol)、[Claude 定价](https://platform.claude.com/docs/en/about-claude/pricing)。价格表也保留了来源链接。
-
-如需便携配置目录：
+配置默认保存在**程序旁的 `data` 文件夹**，包括 `settings.json` 与 `pricing.json`。移动整个程序文件夹即可带走配置，无需在系统盘安装应用数据。也可使用其他相对目录：
 
 ```powershell
-.\GlassPulse.exe --data-dir "data"
+.\GlassPulse.exe --data-dir ".\my-data"
 ```
 
-## 编译与验证
+价格表有 30 个条目，核验日期为 2026-10-27，采用本地快照。升级会补充缺失的内置模型，同时保留已编辑的单价；可通过「编辑价格表」修改现有条目。自然周会自动切换，单价不会自动联网下载。
 
-在 Windows PowerShell 5.1 或 PowerShell 7 中运行：
+官方来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing)、[旧 Sol 模型定价](https://developers.openai.com/api/docs/models/gpt-5.6-sol)、[Claude 定价](https://platform.claude.com/docs/en/about-claude/pricing)。价格表也保留来源链接。
+
+## 隐私、编译与验证
+
+软件不发起网络请求，不另存对话副本。运行配置、本地日志、数据库、诊断和凭据均排除在版本控制及发布包之外。公开截图只使用演示数据，不展示本机绝对路径。
 
 ```powershell
 .\build.ps1 -Test
+.\package.ps1 -SkipBuild
 ```
 
-脚本使用 Windows 自带的 .NET Framework C# 编译器，无需下载 SDK、还原 NuGet 或调用付费服务。输出为 `dist\GlassPulse.exe`。测试覆盖去重、增量读取、缓存计价、模型别名、未知单价、长上下文、夏令时和周边界。
+使用 Windows 自带的 .NET Framework 编译器，无需下载 SDK 或还原 NuGet。验证包括 40 个计数 / 配置场景，以及两种主题、三个工具选择和三种视图组合的 18 个原生窗口检查。
 
-生成演示截图与检查原生交互：
+开发参数：`--preview <目录>` 生成演示预览，`--smoke` 检查图表与设置，`--report <文件>` 输出本地汇总诊断。可用 `--data-dir` 指定它们的便携配置位置。诊断报告请保留在本机。
 
-```powershell
-$exe = (Resolve-Path .\dist\GlassPulse.exe).Path
-Start-Process $exe -ArgumentList '--preview build\preview --data-dir build\preview-data' -Wait
-Start-Process $exe -ArgumentList '--smoke --data-dir build\smoke-data' -Wait
-```
+## 相关工具与许可证
 
-从其他工作目录运行时，请使用绝对输出路径。预览仅使用演示数据。`--report <路径>` 会扫描两次，并将汇总诊断写入本地 JSON；诊断文件应保留在本机。
+[ccusage](https://github.com/ccusage/ccusage) 适合 CLI 报告，[codex-bar](https://github.com/jspann21/codex-bar) 侧重 Codex 周容量，[CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) 提供任务栏额度集成。GlassPulse 使用自己的原生实现。
 
-## 仓库结构
-
-```text
-src/                 原生界面、图表、日志读取和计价
-tests/CoreTests.cs   独立计数与读取场景测试
-pricing.json         带官方来源的价格快照
-assets/              图标和演示数据截图
-docs/                需求说明和发布说明
-build.ps1            Windows 编译与测试
-package.ps1          便携 ZIP 与 SHA-256 清单
-publish.ps1          通过已登录的 gh 发布全新仓库
-.github/workflows/   Windows CI 与标签发布
-```
-
-## 调研过的相关项目
-
-| 项目 | 适合的用途 |
-| --- | --- |
-| [ccusage](https://github.com/ccusage/ccusage) | 从本地日志生成丰富的 CLI token／费用报告 |
-| [codex-bar](https://github.com/jspann21/codex-bar) | 轻量 Windows 悬浮条，重点显示 Codex 官方周容量 |
-| [CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) | Windows 任务栏集成与多个提供商的额度查询 |
-
-GlassPulse 采用自己的原生实现，侧重玻璃悬浮条和本地 token 分析，未打包上述项目的源代码。
-
-## 许可证
-
-[MIT](LICENSE)。
+[MIT 许可证](LICENSE)。

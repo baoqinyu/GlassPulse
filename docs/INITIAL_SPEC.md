@@ -26,4 +26,4 @@ Only available local usage logs contribute. Subscription capacity percentages, c
 
 ## Verification
 
-`build.ps1 -Test` compiles with warnings treated as errors and runs 35 standalone scenarios. `--preview` renders real UI controls with synthetic data. `--smoke` exercises native composition, expand/mini/hide/restore, chart mode switches and CSV export. Runtime scanning is also checked against local logs; no personal logs or diagnostics belong in the repository.
+`build.ps1 -Test` compiles with warnings treated as errors and runs 40 accounting/configuration scenarios and 18 native-window checks. `--preview` renders real UI controls with synthetic data. `--smoke` exercises native composition, expand/mini/hide/restore, chart mode switches and CSV export. Runtime scanning is also checked against local logs; no personal logs or diagnostics belong in the repository.

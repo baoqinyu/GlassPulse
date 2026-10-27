@@ -33,6 +33,16 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Test build failed.' }
     & $testExe (Join-Path $repoRoot 'pricing.json')
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
+    $windowTest = Join-Path $buildDirectory 'GlassPulse.WindowTests.exe'
+    $windowArgs = @('/nologo','/utf8output','/warnaserror+','/target:exe','/main:GlassPulse.Tests.WindowTests',"/out:$windowTest",
+        "/win32manifest:$repoRoot\src\app.manifest",
+        "/resource:$repoRoot\src\Widget.xaml,GlassPulse.Widget.xaml",
+        "/resource:$repoRoot\src\Settings.xaml,GlassPulse.Settings.xaml") + $references + $sourceFiles + (Join-Path $repoRoot 'tests\WindowTests.cs')
+    & $compiler @windowArgs
+    if ($LASTEXITCODE -ne 0) { throw 'Native window test build failed.' }
+    & $windowTest (Join-Path $repoRoot 'pricing.json') (Join-Path $buildDirectory 'window-test-data')
+    if ($LASTEXITCODE -ne 0) { throw 'Native window region tests failed.' }
+
 }
 $built = Get-Item -LiteralPath $exePath
 Write-Output ("Built {0} ({1:N0} KB)" -f $built.FullName, ($built.Length / 1KB))
