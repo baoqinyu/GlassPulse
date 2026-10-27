@@ -1,0 +1,11 @@
+build/
+dist/
+*.user
+*.suo
+.vs/
+GlassPulse.data/
+data/
+settings.json
+usage-cache.json
+crash.log
+*.local.json

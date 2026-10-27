@@ -1,0 +1,310 @@
+{
+  "VerifiedAt": "2026-10-27",
+  "Basis": "USD per 1M tokens; standard global API token equivalent; excludes tools, tax, speed and regional premiums. This is a versioned snapshot, not a live price feed.",
+  "Sources": [
+    "https://developers.openai.com/api/docs/pricing",
+    "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+    "https://developers.openai.com/api/docs/models/gpt-6-sol",
+    "https://developers.openai.com/api/docs/models/gpt-6-astra",
+    "https://developers.openai.com/api/docs/models/gpt-6.1-terra",
+    "https://developers.openai.com/api/docs/models/gpt-6-luna",
+    "https://developers.openai.com/api/docs/models/gpt-5.6-luna",
+    "https://developers.openai.com/api/docs/models/gpt-5.4",
+    "https://developers.openai.com/api/docs/models/gpt-5.2-codex",
+    "https://platform.claude.com/docs/en/about-claude/pricing"
+  ],
+  "Models": [
+    {
+      "Model": "gpt-6.1-sol",
+      "Input": 2,
+      "Cached": 0.1,
+      "Output": 10,
+      "WriteShort": 2.5,
+      "WriteLong": 5,
+      "LongContextThreshold": 272000,
+      "LongInput": 4,
+      "LongCached": 0.2,
+      "LongOutput": 15,
+      "LongWriteShort": 5,
+      "LongWriteLong": 10
+    },
+    {
+      "Model": "gpt-6-sol",
+      "Input": 2,
+      "Cached": 0.2,
+      "Output": 10,
+      "WriteShort": 2.5,
+      "WriteLong": 5,
+      "LongContextThreshold": 272000,
+      "LongInput": 4,
+      "LongCached": 0.4,
+      "LongOutput": 15,
+      "LongWriteShort": 5,
+      "LongWriteLong": 10
+    },
+    {
+      "Model": "gpt-6-astra",
+      "Input": 10,
+      "Cached": 1,
+      "Output": 50,
+      "WriteShort": 12.5,
+      "WriteLong": 25,
+      "LongContextThreshold": 272000,
+      "LongInput": 20,
+      "LongCached": 2,
+      "LongOutput": 75,
+      "LongWriteShort": 25,
+      "LongWriteLong": 50
+    },
+    {
+      "Model": "gpt-6.1-terra",
+      "Input": 1,
+      "Cached": 0.05,
+      "Output": 5,
+      "WriteShort": 1.25,
+      "WriteLong": 2.5,
+      "LongContextThreshold": 272000,
+      "LongInput": 2,
+      "LongCached": 0.1,
+      "LongOutput": 7.5,
+      "LongWriteShort": 2.5,
+      "LongWriteLong": 5
+    },
+    {
+      "Model": "gpt-6-luna",
+      "Input": 0.1,
+      "Cached": 0.01,
+      "Output": 0.5,
+      "WriteShort": 0.125,
+      "WriteLong": 0.25,
+      "LongContextThreshold": 272000,
+      "LongInput": 0.2,
+      "LongCached": 0.02,
+      "LongOutput": 0.75,
+      "LongWriteShort": 0.25,
+      "LongWriteLong": 0.5
+    },
+    {
+      "Model": "gpt-5.6-luna",
+      "Input": 0.2,
+      "Cached": 0.02,
+      "Output": 1.2,
+      "WriteShort": 0.25,
+      "WriteLong": 0,
+      "LongContextThreshold": 272000,
+      "LongInput": 0.4,
+      "LongCached": 0.04,
+      "LongOutput": 1.8,
+      "LongWriteShort": 0.5,
+      "LongWriteLong": 0
+    },
+    {
+      "Model": "gpt-5.4",
+      "Input": 2.5,
+      "Cached": 0.25,
+      "Output": 15,
+      "WriteShort": 0,
+      "WriteLong": 0,
+      "LongContextThreshold": 272000,
+      "LongInput": 5,
+      "LongCached": 0.5,
+      "LongOutput": 22.5,
+      "LongWriteShort": 0,
+      "LongWriteLong": 0
+    },
+    {
+      "Model": "gpt-5.3-codex",
+      "Input": 1.75,
+      "Cached": 0.175,
+      "Output": 14,
+      "WriteShort": 0,
+      "WriteLong": 0
+    },
+    {
+      "Model": "gpt-5.2-codex",
+      "Input": 1.75,
+      "Cached": 0.175,
+      "Output": 14,
+      "WriteShort": 0,
+      "WriteLong": 0
+    },
+    {
+      "Model": "claude-fable-5-1",
+      "Input": 10,
+      "Cached": 0.25,
+      "Output": 50,
+      "WriteShort": 12.5,
+      "WriteLong": 20
+    },
+    {
+      "Model": "claude-mythos-5-1",
+      "Input": 10,
+      "Cached": 0.25,
+      "Output": 50,
+      "WriteShort": 12.5,
+      "WriteLong": 20
+    },
+    {
+      "Model": "claude-fable-5",
+      "Input": 10,
+      "Cached": 1,
+      "Output": 50,
+      "WriteShort": 12.5,
+      "WriteLong": 20
+    },
+    {
+      "Model": "claude-mythos-5",
+      "Input": 10,
+      "Cached": 1,
+      "Output": 50,
+      "WriteShort": 12.5,
+      "WriteLong": 20
+    },
+    {
+      "Model": "claude-opus-5-5",
+      "Input": 4,
+      "Cached": 0.2,
+      "Output": 20,
+      "WriteShort": 5,
+      "WriteLong": 8
+    },
+    {
+      "Model": "claude-sonnet-5-5",
+      "Input": 2,
+      "Cached": 0.1,
+      "Output": 10,
+      "WriteShort": 2.5,
+      "WriteLong": 4
+    },
+    {
+      "Model": "claude-haiku-5-5",
+      "Input": 0.1,
+      "Cached": 0.01,
+      "Output": 0.5,
+      "WriteShort": 0.125,
+      "WriteLong": 0.2,
+      "LongContextThreshold": 100000,
+      "LongInput": 0.5,
+      "LongCached": 0.05,
+      "LongOutput": 2.5,
+      "LongWriteShort": 0.625,
+      "LongWriteLong": 1
+    },
+    {
+      "Model": "claude-opus-5",
+      "Input": 5,
+      "Cached": 0.5,
+      "Output": 25,
+      "WriteShort": 6.25,
+      "WriteLong": 10
+    },
+    {
+      "Model": "claude-opus-4-8",
+      "Input": 5,
+      "Cached": 0.5,
+      "Output": 25,
+      "WriteShort": 6.25,
+      "WriteLong": 10
+    },
+    {
+      "Model": "claude-opus-4-7",
+      "Input": 5,
+      "Cached": 0.5,
+      "Output": 25,
+      "WriteShort": 6.25,
+      "WriteLong": 10
+    },
+    {
+      "Model": "claude-opus-4-6",
+      "Input": 5,
+      "Cached": 0.5,
+      "Output": 25,
+      "WriteShort": 6.25,
+      "WriteLong": 10
+    },
+    {
+      "Model": "claude-opus-4-5",
+      "Input": 5,
+      "Cached": 0.5,
+      "Output": 25,
+      "WriteShort": 6.25,
+      "WriteLong": 10
+    },
+    {
+      "Model": "claude-opus-4-1",
+      "Input": 15,
+      "Cached": 1.5,
+      "Output": 75,
+      "WriteShort": 18.75,
+      "WriteLong": 30
+    },
+    {
+      "Model": "claude-opus-4",
+      "Input": 15,
+      "Cached": 1.5,
+      "Output": 75,
+      "WriteShort": 18.75,
+      "WriteLong": 30
+    },
+    {
+      "Model": "claude-sonnet-5",
+      "Input": 2,
+      "Cached": 0.2,
+      "Output": 10,
+      "WriteShort": 2.5,
+      "WriteLong": 4
+    },
+    {
+      "Model": "claude-sonnet-4-6",
+      "Input": 3,
+      "Cached": 0.3,
+      "Output": 15,
+      "WriteShort": 3.75,
+      "WriteLong": 6
+    },
+    {
+      "Model": "claude-sonnet-4-5",
+      "Input": 3,
+      "Cached": 0.3,
+      "Output": 15,
+      "WriteShort": 3.75,
+      "WriteLong": 6,
+      "LongContextThreshold": 200000,
+      "LongInput": 6,
+      "LongCached": 0.6,
+      "LongOutput": 22.5,
+      "LongWriteShort": 7.5,
+      "LongWriteLong": 12
+    },
+    {
+      "Model": "claude-sonnet-4",
+      "Input": 3,
+      "Cached": 0.3,
+      "Output": 15,
+      "WriteShort": 3.75,
+      "WriteLong": 6,
+      "LongContextThreshold": 200000,
+      "LongInput": 6,
+      "LongCached": 0.6,
+      "LongOutput": 22.5,
+      "LongWriteShort": 7.5,
+      "LongWriteLong": 12
+    },
+    {
+      "Model": "claude-haiku-4-5",
+      "Input": 1,
+      "Cached": 0.1,
+      "Output": 5,
+      "WriteShort": 1.25,
+      "WriteLong": 2
+    },
+    {
+      "Model": "claude-haiku-3-5",
+      "Input": 0.8,
+      "Cached": 0.08,
+      "Output": 4,
+      "WriteShort": 1,
+      "WriteLong": 1.6
+    }
+  ]
+}

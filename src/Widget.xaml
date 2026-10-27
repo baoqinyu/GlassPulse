@@ -1,0 +1,188 @@
+<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Width="508" TextElement.FontFamily="Segoe UI, Microsoft YaHei UI" TextElement.Foreground="#F2F6F5"
+      TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
+  <Grid.Resources>
+    <SolidColorBrush x:Key="Muted" Color="#A9B6B6"/>
+    <Style TargetType="Button" x:Key="IconButton">
+      <Setter Property="Foreground" Value="#AFC0BF"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Width" Value="25"/>
+      <Setter Property="Height" Value="25"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="ButtonSurface" Background="{TemplateBinding Background}" CornerRadius="7">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonSurface" Property="Background" Value="#18FFFFFF"/><Setter Property="Foreground" Value="White"/></Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonSurface" Property="Background" Value="#24FFFFFF"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.25"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style TargetType="ProgressBar" x:Key="Meter">
+      <Setter Property="Height" Value="5"/>
+      <Setter Property="Maximum" Value="100"/>
+      <Setter Property="Background" Value="#18FFFFFF"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ProgressBar">
+            <Grid ClipToBounds="True">
+              <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="3"/>
+              <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="3"/>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <LinearGradientBrush x:Key="Mint" StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#55BBA6" Offset="0"/><GradientStop Color="#B9F9DC" Offset="1"/></LinearGradientBrush>
+    <LinearGradientBrush x:Key="Peach" StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#B6806A" Offset="0"/><GradientStop Color="#F4C6A6" Offset="1"/></LinearGradientBrush>
+    <Style TargetType="ScrollBar">
+      <Setter Property="Width" Value="6"/><Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar">
+        <Track x:Name="PART_Track" IsDirectionReversed="True" Orientation="Vertical">
+          <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/></Track.DecreaseRepeatButton>
+          <Track.Thumb><Thumb><Thumb.Template><ControlTemplate TargetType="Thumb"><Border Background="#657E80" CornerRadius="2" Width="4" HorizontalAlignment="Center"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+          <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/></Track.IncreaseRepeatButton>
+        </Track>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+  </Grid.Resources>
+  <Border Margin="12" CornerRadius="24" Background="#1C1A2227">
+    <Border.Effect><DropShadowEffect BlurRadius="28" ShadowDepth="6" Color="#050D16" Opacity="0.23"/></Border.Effect>
+  </Border>
+  <Border x:Name="GlassSurface" Margin="12" CornerRadius="24" IsHitTestVisible="False">
+    <Border.Background>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#B5798F9C" Offset="0"/><GradientStop Color="#BA263846" Offset="0.35"/><GradientStop Color="#C02B2C40" Offset="0.8"/><GradientStop Color="#B252485B" Offset="1"/></LinearGradientBrush>
+    </Border.Background>
+  </Border>
+  <Border Margin="13" CornerRadius="23" IsHitTestVisible="False">
+    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0.8,1"><GradientStop Color="#19FFFFFF" Offset="0"/><GradientStop Color="#02FFFFFF" Offset="0.42"/><GradientStop Color="#00FFFFFF" Offset="0.75"/></LinearGradientBrush></Border.Background>
+  </Border>
+  <Border x:Name="Frame" Margin="12" CornerRadius="24" BorderThickness="1" Padding="20,15,20,13" Background="Transparent">
+    <Border.BorderBrush><LinearGradientBrush StartPoint="0,0" EndPoint="0.65,1"><GradientStop Color="#9CFFFFFF" Offset="0"/><GradientStop Color="#25FFFFFF" Offset="0.5"/><GradientStop Color="#50FFFFFF" Offset="1"/></LinearGradientBrush></Border.BorderBrush>
+    <Grid>
+      <StackPanel x:Name="FullView">
+        <Grid Height="25">
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Grid Width="17" Height="17" Margin="0,0,8,0">
+              <Path Data="M8.5,0.8 L16.2,8.5 8.5,16.2 0.8,8.5 Z" Stroke="#C0F3DD" StrokeThickness="1.2"/>
+              <Path Data="M5,10 L5,7 M8.5,12 L8.5,5 M12,10 L12,7" Stroke="#C0F3DD" StrokeThickness="1.2"/>
+            </Grid>
+            <TextBlock Text="GlassPulse" FontWeight="SemiBold" FontSize="12"/>
+            <Border Background="#13C4F8DF" CornerRadius="4" Padding="5,2" Margin="9,0,0,0"><TextBlock x:Name="WeekBadge" Text="本周" FontSize="9" Foreground="#BCE7D8"/></Border>
+          </StackPanel>
+          <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button x:Name="PreviousButton" Style="{StaticResource IconButton}" Content="‹" ToolTip="上一周" AutomationProperties.Name="上一周"/>
+            <TextBlock x:Name="WeekRange" Text="10.26 – 11.01" FontSize="10" VerticalAlignment="Center" Foreground="{StaticResource Muted}" Margin="2,0"/>
+            <Button x:Name="NextButton" Style="{StaticResource IconButton}" Content="›" ToolTip="下一周" AutomationProperties.Name="下一周"/>
+            <Button x:Name="SettingsButton" Style="{StaticResource IconButton}" FontFamily="Segoe MDL2 Assets" Content="&#xE713;" ToolTip="偏好设置" AutomationProperties.Name="偏好设置" Margin="3,0,0,0"/>
+            <Button x:Name="HideButton" Style="{StaticResource IconButton}" Content="−" ToolTip="收起到托盘 · Ctrl+Alt+G 唤回" AutomationProperties.Name="隐藏到托盘"/>
+          </StackPanel>
+        </Grid>
+        <StackPanel Margin="0,14,0,0">
+          <Grid Height="23">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Text="›_" Foreground="#AEEDD8" FontFamily="Consolas" FontWeight="Bold" FontSize="14" Width="26"/>
+              <TextBlock Text="Codex" FontSize="13" FontWeight="SemiBold"/>
+              <TextBlock x:Name="CodexTokens" Text="正在读取…" Foreground="{StaticResource Muted}" FontSize="11" Margin="12,1,0,0"/>
+            </StackPanel>
+            <TextBlock x:Name="CodexCost" Text="$0.00" HorizontalAlignment="Right" FontSize="17" FontWeight="SemiBold" Foreground="#D9FAEB"/>
+          </Grid>
+          <ProgressBar x:Name="CodexBar" Style="{StaticResource Meter}" Foreground="{StaticResource Mint}" Margin="0,6,0,0" AutomationProperties.Name="Codex 自定周预算进度"/>
+          <TextBlock x:Name="CodexBudget" Text="自定周预算 $100" FontSize="9" Foreground="{StaticResource Muted}" Margin="0,5,0,0"/>
+        </StackPanel>
+        <StackPanel Margin="0,12,0,0">
+          <Grid Height="23">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <Grid Width="26" Height="18"><Path Data="M8,0 L8,16 M0,8 L16,8 M2.3,2.3 L13.7,13.7 M2.3,13.7 L13.7,2.3" Stroke="#F1BDA0" StrokeThickness="1.6" Width="16" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center"/></Grid>
+              <TextBlock Text="Claude" FontSize="13" FontWeight="SemiBold"/>
+              <TextBlock x:Name="ClaudeTokens" Text="正在读取…" Foreground="{StaticResource Muted}" FontSize="11" Margin="12,1,0,0"/>
+            </StackPanel>
+            <TextBlock x:Name="ClaudeCost" Text="$0.00" HorizontalAlignment="Right" FontSize="17" FontWeight="SemiBold" Foreground="#F7DDCB"/>
+          </Grid>
+          <ProgressBar x:Name="ClaudeBar" Style="{StaticResource Meter}" Foreground="{StaticResource Peach}" Margin="0,6,0,0" AutomationProperties.Name="Claude 自定周预算进度"/>
+          <TextBlock x:Name="ClaudeBudget" Text="自定周预算 $100" FontSize="9" Foreground="{StaticResource Muted}" Margin="0,5,0,0"/>
+        </StackPanel>
+        <Grid Margin="0,12,0,0" Height="20">
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Ellipse x:Name="LiveDot" Width="4" Height="4" Fill="#A6E8CB" Margin="0,0,6,0"/>
+            <TextBlock x:Name="StatusText" Text="本地统计" FontSize="9" Foreground="{StaticResource Muted}"/>
+            <TextBlock Text=" · 标准 API 折算" FontSize="9" Foreground="{StaticResource Muted}"/>
+          </StackPanel>
+          <Button x:Name="DetailsButton" HorizontalAlignment="Right" Style="{StaticResource IconButton}" Width="88" Height="20" FontSize="10" Content="展开面板  ⌄" ToolTip="双击空白处也可展开" AutomationProperties.Name="展开或收起 dashboard"/>
+        </Grid>
+        <ScrollViewer x:Name="DashboardScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="DetailPanel" Visibility="Collapsed">
+          <Border Height="1" Background="#18FFFFFF" Margin="0,12,0,14"/>
+          <UniformGrid Columns="4" Margin="0,0,0,14">
+            <StackPanel><TextBlock Text="全部 TOKENS" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="TotalTokens" FontSize="23" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
+            <StackPanel><TextBlock Text="标准 API 等值" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="TotalCost" FontSize="23" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
+            <StackPanel ToolTip="缓存读取 token / 全部输入 token"><TextBlock Text="缓存复用比例" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="CacheRatio" FontSize="23" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
+            <StackPanel><TextBlock Text="去重用量记录" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="RequestCount" FontSize="23" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
+          </UniformGrid>
+          <Grid Margin="0,0,0,12">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+            <Border CornerRadius="12" Background="#0BFFFFFF" Padding="14,12">
+              <StackPanel>
+                <Grid Height="24">
+                  <TextBlock x:Name="TrendTitle" Text="时段分布" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <StackPanel HorizontalAlignment="Right" Orientation="Horizontal"><Button x:Name="TimeModeButton" Style="{StaticResource IconButton}" Content="按时" FontSize="9" Width="38" Height="22" ToolTip="切换按日 / 按小时" AutomationProperties.Name="切换时间分布粒度"/><Button x:Name="MetricButton" Style="{StaticResource IconButton}" Content="Token" FontSize="9" Width="42" Height="22" ToolTip="切换 token / API 等值" AutomationProperties.Name="切换图表计量单位"/></StackPanel>
+                </Grid>
+                <Canvas x:Name="TrendChart" Height="125" Margin="0,8,0,0" ClipToBounds="True" AutomationProperties.Name="Codex 和 Claude 随时间分布的折线图"/>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0"><Ellipse Fill="#A6E8CB" Width="4" Height="4" Margin="0,0,5,0"/><TextBlock Text="Codex" FontSize="9" Foreground="{StaticResource Muted}"/><Ellipse Fill="#F4C6A6" Width="4" Height="4" Margin="15,0,5,0"/><TextBlock Text="Claude" FontSize="9" Foreground="{StaticResource Muted}"/></StackPanel>
+              </StackPanel>
+            </Border>
+            <Border Grid.Column="2" CornerRadius="12" Background="#0BFFFFFF" Padding="14,12">
+              <StackPanel>
+                <TextBlock Text="模型占比 · tokens" FontSize="11" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                <Grid Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="96"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                  <Canvas x:Name="DonutChart" Width="90" Height="115" VerticalAlignment="Center" AutomationProperties.Name="模型 token 占比环形图"/>
+                  <StackPanel x:Name="ModelLegend" Grid.Column="1" VerticalAlignment="Center"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </Grid>
+          <Border CornerRadius="12" Background="#0BFFFFFF" Padding="14,12" Margin="0,0,0,14">
+            <StackPanel><Grid><TextBlock x:Name="BarTitle" Text="每日用量 · tokens" FontSize="11" FontWeight="SemiBold"/><TextBlock Text="Codex   /   Claude" FontSize="9" Foreground="{StaticResource Muted}" HorizontalAlignment="Right"/></Grid>
+              <Canvas x:Name="Chart" Height="80" Margin="0,12,0,0" ClipToBounds="True" AutomationProperties.Name="每天 Codex 和 Claude 的并列柱状图"/>
+            </StackPanel>
+          </Border>
+          <UniformGrid Columns="4" Margin="0,0,0,12">
+            <StackPanel><TextBlock Text="普通输入" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="InputDetail" FontSize="13" Margin="0,4,0,0"/></StackPanel>
+            <StackPanel><TextBlock Text="缓存读取" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="CacheDetail" FontSize="13" Margin="0,4,0,0"/></StackPanel>
+            <StackPanel><TextBlock Text="缓存写入" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="WriteDetail" FontSize="13" Margin="0,4,0,0"/></StackPanel>
+            <StackPanel><TextBlock Text="输出" FontSize="9" Foreground="{StaticResource Muted}"/><TextBlock x:Name="OutputDetail" FontSize="13" Margin="0,4,0,0"/></StackPanel>
+          </UniformGrid>
+          <TextBlock x:Name="WarningText" TextWrapping="Wrap" Foreground="#EEC69F" FontSize="10" Margin="0,0,0,8" Visibility="Collapsed"/>
+          <Grid>
+            <TextBlock x:Name="ResetText" FontSize="9" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+            <Button x:Name="ExportButton" Content="导出 CSV  ↗" Style="{StaticResource IconButton}" FontSize="10" Width="88" Height="23" HorizontalAlignment="Right" AutomationProperties.Name="导出此周每日汇总 CSV"/>
+          </Grid>
+        </StackPanel>
+        </ScrollViewer>
+      </StackPanel>
+      <Grid x:Name="MiniView" Visibility="Collapsed" Height="46" ToolTip="双击展开 dashboard · 右键设置 · Ctrl+Alt+G 唤回">
+        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="25"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel>
+          <Grid><TextBlock Text="›_  Codex" FontSize="11" Foreground="#C5F3DE"/><TextBlock x:Name="MiniCodexCost" HorizontalAlignment="Right" FontSize="12" FontWeight="SemiBold"/></Grid>
+          <ProgressBar x:Name="MiniCodexBar" Style="{StaticResource Meter}" Height="4" Foreground="{StaticResource Mint}" Margin="0,7,0,0" AutomationProperties.Name="Codex 自定周预算进度"/>
+          <TextBlock x:Name="MiniCodexTokens" FontSize="9" Foreground="{StaticResource Muted}" Margin="0,5,0,0"/>
+        </StackPanel>
+        <Border Grid.Column="1" Background="#18FFFFFF" Width="1" Margin="0,2"/>
+        <StackPanel Grid.Column="2">
+          <Grid><TextBlock Text="✳  Claude" FontSize="11" Foreground="#F4D2B8"/><TextBlock x:Name="MiniClaudeCost" HorizontalAlignment="Right" FontSize="12" FontWeight="SemiBold"/></Grid>
+          <ProgressBar x:Name="MiniClaudeBar" Style="{StaticResource Meter}" Height="4" Foreground="{StaticResource Peach}" Margin="0,7,0,0" AutomationProperties.Name="Claude 自定周预算进度"/>
+          <TextBlock x:Name="MiniClaudeTokens" FontSize="9" Foreground="{StaticResource Muted}" Margin="0,5,0,0"/>
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </Border>
+</Grid>
