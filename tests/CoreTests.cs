@@ -270,6 +270,9 @@ internal static class CoreTests
         Run("Provider selection filters totals, models and availability", delegate {
             var c=Record(100);var a=Record(200,"claude-opus-5-5");a.Provider="claude";
             var week=WeekClock.Aggregate(new[]{c,a},prices,Now,TimeZoneInfo.Utc,1,0);
+            week.Codex.FirstDate="2024-01-01"; week.Claude.FirstDate="2026-10-19";
+            Equal("2026-10-19",week.SelectProviders("claude").EarliestDate());
+            Equal("2024-01-01",week.SelectProviders("codex").EarliestDate());
             var codex=week.SelectProviders("codex");Equal(100L,codex.Codex.Tokens);Equal(0L,codex.Claude.Tokens);Equal(1,codex.ModelTokens.Count);
             var claude=week.SelectProviders("claude");Equal(0L,claude.Codex.Tokens);Equal(200L,claude.Claude.Tokens);Equal(1,claude.ModelTokens.Count);
             Equal(300L,week.Codex.Tokens+week.Claude.Tokens);

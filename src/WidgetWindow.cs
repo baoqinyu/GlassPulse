@@ -359,6 +359,12 @@ namespace GlassPulse
             loadedSummary = summary;
             summary = summary.SelectProviders(Preferences.Providers);
             Current = summary;
+            if (weekOffset < EarliestWeekOffset())
+            {
+                weekOffset = EarliestWeekOffset();
+                if (demo) ChangeWeek(0); else { Get<TextBlock>("StatusText").Text = "正在加载所选工具的历史"; Refresh(); }
+                return;
+            }
             UpdateWeekSelector();
             Get<TextBlock>("WeekBadge").Text = summary.Demo ? "演示" : weekOffset == 0 ? "本周" : "历史";
             Get<Button>("NextButton").IsEnabled = weekOffset < 0;
