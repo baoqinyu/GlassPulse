@@ -47,11 +47,11 @@ Each budget bar represents **priced API-equivalent usage / your chosen weekly bu
 
 Dollars use standard global API token prices, including supported cache and long-context categories. The active catalog revalues all selected weeks at its configured prices. Fast/priority premiums, regional premiums, tool calls, taxes and account discounts are excluded.
 
-Unknown prices retain their tokens. Fully unpriced usage displays `待定价`; a partially priced total uses `≥`. Old Claude records without cache TTL use the short-write rate and show an estimate notice. Reasoning already included in output is counted once. Duplicate streamed Claude blocks and modern/legacy Codex records are reconciled.
+Unknown prices retain their tokens. Fully unpriced usage displays `待定价`; a partially priced total uses `≥`. Old Claude records without cache TTL use the short-write rate and show an estimate notice. Reasoning already included in output is counted once. Duplicate streamed Claude blocks are reconciled. Codex follows canonical token-count request deltas, skips unchanged cumulative snapshots and copied fork prefixes, and adds only explicit compaction requests not already covered by cumulative usage. Request metadata is not another request. Routing aliases use the ccusage reference-model timeline and remain labelled estimates.
 
 ## Local data and history
 
-The app discovers the tools' normal home directories. `CODEX_HOME` and `CLAUDE_CONFIG_DIR` are honored. Settings can override either home directory. It reads Codex session and archived-session JSONL logs, and Claude Code project/subagent JSONL logs.
+The app discovers the tools' normal home directories. `CODEX_HOME` and `CLAUDE_CONFIG_DIR` are honored. Settings can override either home directory. It reads plain and Zstandard-compressed Codex session/archived rollouts, and Claude Code project/subagent JSONL logs. Plain siblings and active copies take precedence. Historical rollouts are decoded as streams; unchanged compressed files are not reread.
 
 History covers the logs still available locally. Plain web chats, other devices and cloud activity require compatible logs in the selected source. Deleted source logs cannot be reconstructed by the app. Missing sources and malformed records are marked; the earliest available date distinguishes missing history from zero usage.
 
@@ -74,7 +74,7 @@ The application makes no network requests and does not persist conversation copi
 .\package.ps1 -SkipBuild
 ```
 
-The Windows .NET Framework compiler is used without an SDK download or NuGet restore. The test command runs 40 accounting/configuration scenarios and 18 native-window combinations covering both themes, all provider selections and all three view modes.
+The Windows .NET Framework compiler is used without an SDK download or NuGet restore. The test command runs 57 accounting/configuration scenarios and 18 native-window combinations covering both themes, all provider selections and all three view modes.
 
 Developer switches: `--preview <directory>` renders synthetic previews; `--smoke` exercises the charts/settings; `--report <file>` writes local aggregate diagnostics. Use `--data-dir` to keep their output in a chosen portable folder. Diagnostic reports should stay private.
 
@@ -83,3 +83,6 @@ Developer switches: `--preview <directory>` renders synthetic previews; `--smoke
 [ccusage](https://github.com/ccusage/ccusage) provides CLI reports; [codex-bar](https://github.com/jspann21/codex-bar) focuses on Codex capacity; [CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) integrates provider quotas with the Windows taskbar. GlassPulse uses its own native implementation.
 
 [MIT license](LICENSE).\nActual desktop-pixel regression: `./scripts/test-pixel-edges.ps1` compares all exterior pixels against a generated checkerboard in 24 theme/provider/view/movement cases. It checks that glass composition is active and does not read or save personal desktop content. A runner without a visible synthetic desktop is reported unavailable, not passed. Material composition uses Windows components already installed; unsupported composition falls back to transparency.\n
+Compressed-history support uses an embedded, pinned Zstandard decoder (BSD-3-Clause); it is hash-verified and extracted only into the portable `data/native` directory. The running app needs neither Python nor ccusage. The first full archive scan can take longer than later incremental refreshes. The current distribution is Windows x64. See [third-party notices](THIRD_PARTY_NOTICES.md).
+
+Accounting compatibility was checked against ccusage 20.0.40 using matching dates, timezone, week start and Standard API pricing. Four complete September weeks matched every input/cache/output/total token and rounded dollar total. Custom price overrides, different timezones or Fast/Flex tiers can produce intentional differences. Real usage reports stay local; only synthetic fixtures and aggregate equality results are published.

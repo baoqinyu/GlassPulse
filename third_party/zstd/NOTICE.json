@@ -1,0 +1,8 @@
+{
+  "License": "BSD-3-Clause",
+  "Archive": "https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-v1.5.7-win64.zip",
+  "Project": "Zstandard",
+  "ArchiveSHA256": "acb4e8111511749dc7a3ebedca9b04190e37a17afeb73f55d4425dbf0b90fad9",
+  "LibrarySHA256": "8f07e1112ed283e5cd2798833e9a3c32d8961381bc36da04af57a1b0ca9bd40b",
+  "Version": "1.5.7"
+}

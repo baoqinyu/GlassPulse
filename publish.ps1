@@ -26,12 +26,12 @@ try {
         if ($matching) { $runId = $matching.databaseId; break }
         Start-Sleep -Seconds 5
     }
-    if (-not $runId) { throw "Source published at https://github.com/$repository . Wait for Windows CI before tagging v1.1.1." }
+    if (-not $runId) { throw "Source published at https://github.com/$repository . Wait for Windows CI before tagging v1.2.0." }
     & gh run watch $runId --repo $repository --exit-status
     if ($LASTEXITCODE -ne 0) { throw 'Source published; CI failed. Fix the failure before creating a release.' }
-    & git tag v1.1.1
-    if ($LASTEXITCODE -ne 0) { throw 'Could not create v1.1.1 tag.' }
-    & git push origin v1.1.1
+    & git tag v1.2.0
+    if ($LASTEXITCODE -ne 0) { throw 'Could not create v1.2.0 tag.' }
+    & git push origin v1.2.0
     if ($LASTEXITCODE -ne 0) { throw 'Could not push the release tag.' }
     Write-Output "Published source: https://github.com/$repository"
     Write-Output "The tagged-release workflow will publish the executable, ZIP and checksums."

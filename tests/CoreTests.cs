@@ -12,6 +12,7 @@ internal static class CoreTests
     private static PriceCatalog prices;
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-10-27T12:00:00Z");
     private static readonly Encoding Utf8 = new UTF8Encoding(false);
+    private static readonly byte[] CompressedFixture = Convert.FromBase64String("KLUv/QRYhQYA4o0pH2BJ2wawEa293lrojUgbrtdWaBA8gbFdvzcHIgBcECeF916zUn4eIkJ5PhiQErbYslIGtdsfxIGEqMGhjh9ERHlu15gmil1SVG+/ye+BrZ83c3skpgdbgJiIiYhAwCgQFQYDjefbopp1Wf3zhJfUTBFUWS4QgKHoljyvKLJLI7TZHokxrgvvXRnXiHUo2kp4Hllv8ohaJaHaz1XrktguZuXntSX6TQ4Af2GpugM3gmoE1r3JcT7lwkFifE3/g8dHwpLy5LKrwwJJT2tqD5epemA=");
 
     private static void Check(bool value, string message) { if (!value) throw new Exception(message); }
     private static void Equal<T>(T expected, T actual)
@@ -90,7 +91,7 @@ internal static class CoreTests
         });
         Run("Cumulative counter deltas count requests once", delegate {
             LogFile file = new LogFile("x", "codex"); file.ParseLine(Legacy(1000, 800, 100));
-            file.ParseLine(Legacy(2000, 1600, 200, "2026-10-27T10:01:00Z")); Equal(2200L, file.Records.Values.Sum(r => r.Total));
+            file.ParseLine(Legacy(2000, 1600, 200, "2026-10-27T10:01:00Z", Counters(1000,800,100))); Equal(2200L, file.Records.Values.Sum(r => r.Total));
         });
         Run("Forked session inherited counters do not inflate first request", delegate {
             LogFile file = new LogFile("x", "codex"); file.ParseLine(Legacy(100000, 80000, 10000, last: Counters(1000, 800, 100)));
@@ -106,15 +107,15 @@ internal static class CoreTests
         });
         Run("Legacy-only history is retained in mixed-version logs", delegate {
             string root = Sandbox(); Write(CodexPath(root), Session(), Context("gpt-6.1-sol"), Legacy(1000, 800, 100, "2026-10-27T09:00:00Z"),
-                Modern(), Legacy(2000, 1600, 200)); Equal(2200L, Refresh(Engine(root)).Codex.Tokens);
+                Modern(), Legacy(2000, 1600, 200, last: Counters(1000,800,100))); Equal(2200L, Refresh(Engine(root)).Codex.Tokens);
         });
         Run("Archived copies of the same response are deduplicated", delegate {
-            string root = Sandbox(); Write(CodexPath(root), Session(), Context("gpt-6.1-sol"), Modern());
+            string root = Sandbox(); Write(CodexPath(root), Session(), Context("gpt-6.1-sol"), Modern(), Legacy(1000,800,100));
             File.Copy(CodexPath(root), Path.Combine(root, "codex", "archived_sessions", "copy.jsonl")); Equal(1100L, Refresh(Engine(root)).Codex.Tokens);
         });
         Run("Child thread prices resolve through that turn's actual model", delegate {
             string root = Sandbox(); Write(CodexPath(root), Session(), Modern(thread: "child", turn: "childturn"));
-            Write(Path.Combine(root, "codex", "sessions", "child.jsonl"), Session("child"), Context("gpt-6.1-sol", "childturn"));
+            Write(Path.Combine(root, "codex", "sessions", "child.jsonl"), Session("child"), Context("gpt-6.1-sol", "childturn"), Legacy(1000,800,100));
             WeekSummary week = Refresh(Engine(root)); Equal(0L, week.Codex.UnpricedTokens); Equal(.00148m, week.Codex.Cost);
         });
         Run("Claude input excludes cache tokens", delegate {
@@ -214,7 +215,7 @@ internal static class CoreTests
             Equal(1200L, week.Claude.Tokens); Equal(1, week.Errors);
         });
         Run("Invalid price update preserves the last valid catalog visibly", delegate {
-            string root = Sandbox(); Write(CodexPath(root), Session(), Context("gpt-6.1-sol"), Modern()); UsageEngine engine = Engine(root); Refresh(engine);
+            string root = Sandbox(); Write(CodexPath(root), Session(), Context("gpt-6.1-sol"), Modern(), Legacy(1000,800,100)); UsageEngine engine = Engine(root); Refresh(engine);
             string path = Path.Combine(root, "pricing.json"); File.WriteAllText(path, "{broken}", Utf8); File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(3));
             WeekSummary week = Refresh(engine); Equal(.00148m, week.Codex.Cost); Check(week.PriceWarning.Length > 0, "Stale price was not marked");
             File.Copy(priceFile, path, true); File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(6)); Equal("", Refresh(engine).PriceWarning);
@@ -243,7 +244,7 @@ internal static class CoreTests
             Equal(1200L, engine.Refresh(DateTimeOffset.Parse("2026-11-02T12:00:00Z"), TimeZoneInfo.Utc, 1, -1).Claude.Tokens);
         });
         Run("Valid price edits revalue cached history without log writes", delegate {
-            string root = Sandbox(); Write(CodexPath(root), Session(), Context("gpt-6.1-sol"), Modern()); UsageEngine engine = Engine(root);
+            string root = Sandbox(); Write(CodexPath(root), Session(), Context("gpt-6.1-sol"), Modern(), Legacy(1000,800,100)); UsageEngine engine = Engine(root);
             Equal(.00148m, Refresh(engine).Codex.Cost);
             PriceCatalog changed = PriceCatalog.Load(priceFile); changed.Models.Single(p => p.Model == "gpt-6.1-sol").Input = 4;
             string path = Path.Combine(root, "pricing.json"); File.WriteAllText(path, Encode(changed), Utf8); File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(10));
@@ -263,7 +264,7 @@ internal static class CoreTests
             decimal cost; Check(prices.TryCost(Record(1000000,"gpt-5.6-sol"),out cost),"Older model was not priced"); Equal(8m,cost);
         });
         Run("All historical weeks expose their original availability", delegate {
-            string root=Sandbox(); Write(CodexPath(root),Session(),Context("gpt-5.6-sol"),Modern(stamp:"2024-01-02T10:00:00Z"));
+            string root=Sandbox(); Write(CodexPath(root),Session(),Context("gpt-5.6-sol"),Modern(stamp:"2024-01-02T10:00:00Z"),Legacy(1000,800,100,"2024-01-02T10:00:00Z"));
             var engine=Engine(root);var current=Refresh(engine);Equal("2024-01-02",current.Codex.FirstDate);
             var old=engine.Refresh(DateTimeOffset.Parse("2024-01-03T12:00:00Z"),TimeZoneInfo.Utc,1,0);Equal(1100L,old.Codex.Tokens);Check(old.Codex.Cost>0,"Historical price was lost");
         });
@@ -276,6 +277,87 @@ internal static class CoreTests
             var codex=week.SelectProviders("codex");Equal(100L,codex.Codex.Tokens);Equal(0L,codex.Claude.Tokens);Equal(1,codex.ModelTokens.Count);
             var claude=week.SelectProviders("claude");Equal(0L,claude.Codex.Tokens);Equal(200L,claude.Claude.Tokens);Equal(1,claude.ModelTokens.Count);
             Equal(300L,week.Codex.Tokens+week.Claude.Tokens);
+        });
+        Run("Week labels show both endpoints across month and year boundaries", delegate {
+            Equal("09.01–09.07",WeekClock.RangeLabel(new DateTime(2025,9,1)));
+            Equal("08.31–09.06",WeekClock.RangeLabel(new DateTime(2026,8,31)));
+            Equal("12.28–01.03",WeekClock.RangeLabel(new DateTime(2026,12,28)));
+        });
+        Run("Compressed rollouts contribute and unchanged archives are not reread", delegate {
+            string root=Sandbox();File.WriteAllBytes(CodexPath(root)+".zst",CompressedFixture);var engine=Engine(root);
+            var first=Refresh(engine);Equal(1100L,first.Codex.Tokens);Equal(0,first.Errors);long bytes=engine.TotalBytesRead;
+            Equal(1100L,Refresh(engine).Codex.Tokens);Equal(bytes,engine.TotalBytesRead);
+        });
+        Run("Plain rollout wins over a compressed sibling", delegate {
+            string root=Sandbox();File.WriteAllBytes(CodexPath(root)+".zst",CompressedFixture);
+            Write(CodexPath(root),Session(),Context("gpt-6.1-sol"),Legacy(2000,1600,200));
+            Equal(2200L,Refresh(Engine(root)).Codex.Tokens);
+        });
+        Run("Truncated compressed frames retry without committing partial totals", delegate {
+            string root=Sandbox(),path=CodexPath(root)+".zst";File.WriteAllBytes(path,CompressedFixture.Take(CompressedFixture.Length-4).ToArray());
+            var engine=Engine(root);var bad=Refresh(engine);Equal(0L,bad.Codex.Tokens);Check(bad.Errors>0,"Truncated frame was not marked");
+            File.WriteAllBytes(path,CompressedFixture);Equal(1100L,Refresh(engine).Codex.Tokens);
+        });
+        Run("Request metadata alone is not an additional billable request", delegate {
+            var file=new LogFile("x","codex");file.ParseLine(Context("gpt-6.1-sol"));file.ParseLine(Modern());Equal(0,file.Records.Count);
+        });
+        Run("Delayed duplicate request metadata does not use a time heuristic", delegate {
+            var file=new LogFile("x","codex");file.ParseLine(Context("gpt-6.1-sol"));file.ParseLine(Modern());
+            file.ParseLine(Legacy(1000,800,100,"2026-10-27T10:00:12Z"));Equal(1100L,file.Records.Values.Sum(x=>x.Total));
+        });
+        Run("Explicit last-request deltas win over changed cumulative components", delegate {
+            var file=new LogFile("x","codex");file.ParseLine(Legacy(1000,800,100));
+            file.ParseLine(Legacy(9000,7000,900,"2026-10-27T10:01:00Z",Counters(500,200,50)));Equal(1650L,file.Records.Values.Sum(x=>x.Total));
+        });
+        Run("Uncovered remote compaction is counted exactly once", delegate {
+            var file=new LogFile("x","codex");file.ParseLine(Context("gpt-6.1-sol"));file.ParseLine(Modern());
+            file.ParseLine(Encode(new{type="compacted",timestamp="2026-10-27T10:00:20Z",payload=new{compaction_response_id="r1"}}));
+            file.ParseLine(Modern());Equal(1100L,file.Records.Values.Sum(x=>x.Total));
+        });
+        Run("Compaction already covered by a cumulative snapshot is not added", delegate {
+            var file=new LogFile("x","codex");file.ParseLine(Context("gpt-6.1-sol"));file.ParseLine(Modern());file.ParseLine(Legacy(1000,800,100));
+            file.ParseLine(Encode(new{type="compacted",timestamp="2026-10-27T10:00:20Z",payload=new{compaction_response_id="r1"}}));
+            file.ParseLine(Modern());Equal(1100L,file.Records.Values.Sum(x=>x.Total));
+        });
+        Run("Copied usage rows deduplicate across different session identifiers", delegate {
+            string root=Sandbox();Write(CodexPath(root),Session("parent"),Context("gpt-6.1-sol"),Legacy(1000,800,100));
+            Write(Path.Combine(root,"codex","sessions","copy.jsonl"),Session("copy"),Context("gpt-6.1-sol"),Legacy(1000,800,100));
+            Equal(1100L,Refresh(Engine(root)).Codex.Tokens);
+        });
+        Run("Routing-alias prices are labelled as estimates", delegate {
+            var file=new LogFile("x","codex");file.ParseLine(Context("codex-auto-review"));file.ParseLine(Legacy(1000,800,100));
+            var record=file.Records.Values.Single();Equal("gpt-5.6-luna",record.Model);Equal(true,record.EstimatedModel);
+        });
+        Run("A new plain sibling replaces a previously loaded compressed copy", delegate {
+            string root=Sandbox();File.WriteAllBytes(CodexPath(root)+".zst",CompressedFixture);var engine=Engine(root);Equal(1100L,Refresh(engine).Codex.Tokens);
+            Write(CodexPath(root),Session(),Context("gpt-6.1-sol"),Legacy(2000,1600,200));Equal(2200L,Refresh(engine).Codex.Tokens);
+        });
+        Run("Active plain rollouts win over matching archived compressed paths", delegate {
+            string root=Sandbox();Write(CodexPath(root),Session(),Context("gpt-6.1-sol"),Legacy(2000,1600,200));
+            File.WriteAllBytes(Path.Combine(root,"codex","archived_sessions","rollout.jsonl.zst"),CompressedFixture);
+            Equal(2200L,Refresh(Engine(root)).Codex.Tokens);
+        });
+        Run("Fork replay is removed without dropping the child's own request", delegate {
+            string root=Sandbox();
+            Write(CodexPath(root),Session("parent"),Context("gpt-6.1-sol"),Legacy(1000,800,100),Legacy(1500,1000,150,"2026-10-27T10:40:00Z",Counters(500,200,50)));
+            var child=Encode(new{type="session_meta",timestamp="2026-10-27T10:30:00Z",payload=new{id="child",forked_from_id="parent"}});
+            Write(Path.Combine(root,"codex","sessions","child.jsonl"),child,Context("gpt-6.1-sol"),Legacy(1000,800,100,"2026-10-27T10:30:00.010Z"),Legacy(1500,1000,150,"2026-10-27T10:31:00Z",Counters(500,200,50)));
+            Equal(2200L,Refresh(Engine(root)).Codex.Tokens);
+        });
+        Run("Missing-parent replay bursts are not counted as new child usage", delegate {
+            string root=Sandbox();var child=Encode(new{type="session_meta",timestamp="2026-10-27T10:30:00Z",payload=new{id="child",forked_from_id="missing"}});
+            Write(CodexPath(root),child,Context("gpt-6.1-sol"),Legacy(1000,800,100,"2026-10-27T10:30:00.010Z"),Legacy(2000,1600,200,"2026-10-27T10:30:00.020Z",Counters(1000,800,100)),Legacy(2500,1800,250,"2026-10-27T10:30:02Z",Counters(500,200,50)));
+            Equal(550L,Refresh(Engine(root)).Codex.Tokens);
+        });
+        Run("Total-only snapshots subtract raw counters before cache normalization", delegate {
+            var file=new LogFile("x","codex");
+            file.ParseLine(Encode(new{type="event_msg",timestamp="2026-10-27T10:00:00Z",payload=new{type="token_count",info=new{total_token_usage=Counters(1000,800,100)}}}));
+            file.ParseLine(Encode(new{type="event_msg",timestamp="2026-10-27T10:01:00Z",payload=new{type="token_count",info=new{total_token_usage=Counters(2000,600,200)}}}));
+            Equal(2200L,file.Records.Values.Sum(x=>x.Total));
+        });
+        Run("Completed compressed frames accept a final JSON row without newline", delegate {
+            string root=Sandbox();File.WriteAllBytes(CodexPath(root)+".zst",Convert.FromBase64String("KLUv/QRYfQYA0k0pH2BJ2wawEa293lrojUgbrtdWaBA8gbFdvzcHIgBcECfvvWal/DxEhPJ8MCAlbLFlpQxqtz+IAwlRg0MdP4iI8tyuMU0Uu6So3n6T3wNbP2/m9khMD7YAMRETEYGAUSAqDAYaz7dFNeuy+ucJL6mZIqiyXCAAQ9EteV5RZJdGaLM9EmNcF967Mq4R61C0lfA8st7kEbVKQrWfq9YlsV3Mys9rS/SbDgB/Yam6AzeCagTWvclxPuXCQWJ8Tf+Dx0fCkvLksqvDAklPa2oPJKJ58g=="));
+            Equal(1100L,Refresh(Engine(root)).Codex.Tokens);
         });
         Console.WriteLine("RESULT " + passed + " passed, " + failed + " failed");
         return failed == 0 ? 0 : 1;

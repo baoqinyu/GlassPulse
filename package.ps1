@@ -1,5 +1,5 @@
 param(
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.1.1',
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.2.0',
     [string]$OutputDirectory = (Join-Path $PSScriptRoot 'dist'),
     [switch]$SkipBuild
 )
@@ -12,6 +12,7 @@ if (-not (Test-Path -LiteralPath $binaryPath)) { throw 'Build GlassPulse.exe bef
 $packageFiles = @(
     $binaryPath,
     (Join-Path $PSScriptRoot 'LICENSE'),
+    (Join-Path $PSScriptRoot 'THIRD_PARTY_NOTICES.md'),
     (Join-Path $PSScriptRoot 'QUICKSTART.zh-CN.md'),
     (Join-Path $PSScriptRoot 'README.md'),
     (Join-Path $PSScriptRoot 'README.zh-CN.md'),

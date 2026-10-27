@@ -47,11 +47,11 @@
 
 金额按标准、全球 API token 单价折算，支持已列出的缓存和长上下文档位。当前价格表会用于重算所选历史周，不包含极速 / 优先模式、地区加价、工具费、税费或账户折扣。
 
-未知价格仍保留 token。全部未定价时显示「待定价」，部分已定价时金额带 `≥`。旧 Claude 日志未记录缓存时长时按短期缓存写入估算并提示。输出已经包含的推理 token 只计一次，并协调 Claude 重复块与 Codex 新旧重复记录。
+未知价格仍保留 token。全部未定价时显示「待定价」，部分已定价时金额带 `≥`。旧 Claude 日志未记录缓存时长时按短期缓存写入估算并提示。输出已经包含的推理 token 只计一次，Claude 重复块会去重。Codex 使用规范的请求增量，跳过未推进的累计快照及复制的父会话历史，仅补计未被累计快照覆盖的明确上下文整理请求，不把请求元数据再算一次。内部别名按 ccusage 参考时间线估算并标明。
 
 ## 本地数据与历史范围
 
-自动发现工具主目录，支持 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`，也可在设置中指定主目录。读取 Codex 会话与归档 JSONL，以及 Claude Code 项目和子代理 JSONL。
+自动发现工具主目录，支持 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`，也可在设置中指定主目录。读取 Codex 普通及 Zstandard 压缩的会话 / 归档日志，以及 Claude Code 项目和子代理 JSONL。同名普通文件和活动目录副本优先；压缩历史采用流式解码，未变化的文件不重复读取。
 
 历史范围取决于本机仍保留的日志。普通网页聊天、其他设备或云端活动，需要相应兼容日志才会计入。已删除的源日志无法凭空恢复。缺失数据源或异常记录会提示，面板中的最早可用日期可帮助区分「没有记录」与「用量为零」。
 
@@ -74,7 +74,7 @@
 .\package.ps1 -SkipBuild
 ```
 
-使用 Windows 自带的 .NET Framework 编译器，无需下载 SDK 或还原 NuGet。验证包括 40 个计数 / 配置场景，以及两种主题、三个工具选择和三种视图组合的 18 个原生窗口检查。
+使用 Windows 自带的 .NET Framework 编译器，无需下载 SDK 或还原 NuGet。验证包括 57 个计数 / 配置场景，以及两种主题、三个工具选择和三种视图组合的 18 个原生窗口检查。
 
 开发参数：`--preview <目录>` 生成演示预览，`--smoke` 检查图表与设置，`--report <文件>` 输出本地汇总诊断。可用 `--data-dir` 指定它们的便携配置位置。诊断报告请保留在本机。
 
@@ -83,3 +83,6 @@
 [ccusage](https://github.com/ccusage/ccusage) 适合 CLI 报告，[codex-bar](https://github.com/jspann21/codex-bar) 侧重 Codex 周容量，[CodexWinBar](https://github.com/ItayCohen-Prog/CodexWinBar) 提供任务栏额度集成。GlassPulse 使用自己的原生实现。
 
 [MIT 许可证](LICENSE)。\n实屏像素回归：`./scripts/test-pixel-edges.ps1` 使用生成的棋盘背景，对主题、工具、视图和移动状态共 24 种组合逐像素检查边缘，并确认玻璃合成已启用，不保存个人桌面。不具备可见测试桌面的环境会报告无法检测，不会算作通过。材质使用 Windows 已有组件，不支持时回退为透明。\n
+压缩历史使用内嵌、固定版本的 Zstandard 解码器（BSD-3-Clause），校验后仅释放到便携的 `data/native` 目录；运行不依赖 Python 或 ccusage。首次完整扫描压缩归档需要更多时间，之后增量刷新。当前发布版为 Windows x64。参见[第三方声明](THIRD_PARTY_NOTICES.md)。
+
+已按相同日期、时区、周起始日和标准 API 价格，与 ccusage 20.0.40 对照四个完整九月周：输入、缓存、输出、总 token 及显示金额均一致。自定义单价、时区或极速 / Flex 档位不同会影响结果。实际用量报告保留在本机，仓库只包含演示样例与汇总一致性结果。
