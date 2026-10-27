@@ -36,6 +36,9 @@ jobs:
           if ($smoke.ExitCode -ne 0) { throw 'Native UI smoke failed' }
           $result = Get-Content ./build/smoke-data/ui-smoke.json -Raw | ConvertFrom-Json
           if (-not $result.Passed) { throw 'Native UI smoke did not pass' }
+      - name: Verify actual desktop edge pixels when available
+        shell: pwsh
+        run: ./scripts/test-pixel-edges.ps1 -AllowUnavailable
       - name: Package
         shell: pwsh
         run: |

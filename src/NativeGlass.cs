@@ -31,7 +31,8 @@ namespace GlassPulse
         private sealed class SurfaceState
         {
             public string Signature;
-            public bool Rounded, Expanded, Light;
+            public bool Rounded, Expanded, Light, MaterialFailed;
+            public RoundedGlassLayer Material;
         }
         private static readonly ConditionalWeakTable<Window, SurfaceState> Surfaces = new ConditionalWeakTable<Window, SurfaceState>();
         private static SurfaceState Surface(Window window) { return Surfaces.GetValue(window, key => new SurfaceState()); }
@@ -48,7 +49,11 @@ namespace GlassPulse
             });
             // Ctrl+Alt+G restores the widget even while its surface ignores mouse input.
             HotkeyAvailable = RegisterHotKey(handle, HotkeyId, 0x4000 | 0x0002 | 0x0001, 0x47);
-            window.Closed += delegate { UnregisterHotKey(handle, HotkeyId); };
+            window.Closed += delegate { UnregisterHotKey(handle, HotkeyId); var state = Surface(window); if (state.Material != null) state.Material.Dispose(); };
+            window.LocationChanged += delegate { RefreshSurface(window); };
+            window.StateChanged += delegate { RefreshSurface(window); };
+            window.Activated += delegate { RefreshSurface(window); };
+            window.IsVisibleChanged += delegate { RefreshSurface(window); };
             window.LayoutUpdated += delegate { RefreshSurface(window); };
             window.Loaded += delegate { RefreshSurface(window); };
             source.AddHook(delegate(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled) {
@@ -87,7 +92,7 @@ namespace GlassPulse
                 state.Rounded = false;
                 return false;
             }
-            // SetWindowRgn owns and frees this HRGN. The actual HWND and its blur now share the visible card outline.
+            // SetWindowRgn owns this HRGN. It clips controls and hit tests; material pixels have a separate visual clip.
             state.Signature = signature;
             state.Rounded = true;
             changed = true;
@@ -96,12 +101,31 @@ namespace GlassPulse
 
         private static void RefreshSurface(Window window)
         {
+            SurfaceState state = Surface(window);
             bool changed;
-            if (!ClipSurface(window, out changed)) { SetAccent(window, 0, false); return; }
-            if (changed)
+            bool ready = ClipSurface(window, out changed);
+            if (!ready || !window.IsVisible || window.WindowState == WindowState.Minimized || SystemParameters.HighContrast)
             {
-                SurfaceState state = Surface(window);
-                SetAccent(window, SystemParameters.HighContrast ? 0 : state.Expanded ? 4 : 3, state.Light);
+                if (state.Material != null) state.Material.Hide();
+                return;
+            }
+            if (state.MaterialFailed) return;
+            try
+            {
+                if (state.Material == null) state.Material = new RoundedGlassLayer(window);
+                var frame = ((FrameworkElement)window.Content).FindName("Frame") as Border;
+                Rect card = frame.TransformToAncestor(window).TransformBounds(new Rect(frame.RenderSize));
+                Matrix dpi = PresentationSource.FromVisual(window).CompositionTarget.TransformToDevice;
+                state.Material.Update(card, dpi, frame.CornerRadius.TopLeft, state.Expanded);
+            }
+            catch (Exception ex)
+            {
+                if (!(ex is COMException || ex is TypeLoadException || ex is MissingMethodException ||
+                    ex is EntryPointNotFoundException || ex is DllNotFoundException || ex is NotSupportedException ||
+                    ex is InvalidOperationException || ex is InvalidCastException || ex is System.ComponentModel.Win32Exception)) throw;
+                if (state.Material != null) { state.Material.Dispose(); state.Material = null; }
+                state.MaterialFailed = true;
+                // Unsupported composition falls back to WPF transparency, never an unbounded native blur.
             }
         }
 
@@ -109,10 +133,14 @@ namespace GlassPulse
         {
             SurfaceState state = Surface(window);
             state.Expanded = expanded; state.Light = light;
-            bool changed;
-            // Fail closed to visual transparency rather than enabling a rectangular native blur if clipping fails.
-            bool ready = ClipSurface(window, out changed);
-            SetAccent(window, ready && !SystemParameters.HighContrast ? (expanded ? 4 : 3) : 0, light);
+            SetAccent(window, 0, false);
+            RefreshSurface(window);
+        }
+
+        public static bool IsMaterialActive(Window window)
+        {
+            SurfaceState state;
+            return Surfaces.TryGetValue(window, out state) && state.Material != null && state.Material.Active;
         }
 
         private static void SetAccent(Window window, int mode, bool light)
