@@ -51,6 +51,7 @@ namespace GlassPulse
             HotkeyAvailable = RegisterHotKey(handle, HotkeyId, 0x4000 | 0x0002 | 0x0001, 0x47);
             window.Closed += delegate { UnregisterHotKey(handle, HotkeyId); var state = Surface(window); if (state.Material != null) state.Material.Dispose(); };
             window.LocationChanged += delegate { RefreshSurface(window); };
+            window.StateChanged += delegate { RefreshSurface(window); };
             window.Activated += delegate { RefreshSurface(window); };
             window.IsVisibleChanged += delegate { RefreshSurface(window); };
             window.LayoutUpdated += delegate { RefreshSurface(window); };
@@ -103,7 +104,7 @@ namespace GlassPulse
             SurfaceState state = Surface(window);
             bool changed;
             bool ready = ClipSurface(window, out changed);
-            if (!ready || !window.IsVisible || SystemParameters.HighContrast)
+            if (!ready || !window.IsVisible || window.WindowState == WindowState.Minimized || SystemParameters.HighContrast)
             {
                 if (state.Material != null) state.Material.Hide();
                 return;
@@ -121,7 +122,7 @@ namespace GlassPulse
             {
                 if (!(ex is COMException || ex is TypeLoadException || ex is MissingMethodException ||
                     ex is EntryPointNotFoundException || ex is DllNotFoundException || ex is NotSupportedException ||
-                    ex is InvalidOperationException || ex is System.ComponentModel.Win32Exception)) throw;
+                    ex is InvalidOperationException || ex is InvalidCastException || ex is System.ComponentModel.Win32Exception)) throw;
                 if (state.Material != null) { state.Material.Dispose(); state.Material = null; }
                 state.MaterialFailed = true;
                 // Unsupported composition falls back to WPF transparency, never an unbounded native blur.

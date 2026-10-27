@@ -100,7 +100,7 @@ namespace GlassPulse
         internal void Update(Rect card, System.Windows.Media.Matrix dpi, double radius, bool expanded)
         {
             if (disposed) return;
-            if (!owner.IsVisible || SystemParameters.HighContrast) { Hide(); return; }
+            if (!owner.IsVisible || owner.WindowState == WindowState.Minimized || SystemParameters.HighContrast) { Hide(); return; }
             IntPtr foreground = new WindowInteropHelper(owner).Handle;
             RectI bounds;
             if (!GetWindowRect(foreground, out bounds)) { Hide(); return; }
