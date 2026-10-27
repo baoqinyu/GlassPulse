@@ -314,7 +314,7 @@ namespace GlassPulse
                     for (int offset = 0; offset >= earliest; offset--)
                     {
                         DateTime start = current.AddDays(offset * 7);
-                        selector.Items.Add(new ComboBoxItem { Content = start.ToString("yyyy.MM.dd") + " 周", Tag = offset });
+                        selector.Items.Add(new ComboBoxItem { Content = WeekClock.RangeLabel(start), ToolTip = start.ToString("yyyy-MM-dd") + " – " + start.AddDays(6).ToString("yyyy-MM-dd"), Tag = offset });
                     }
                 }
                 selector.SelectedIndex = Math.Max(0, Math.Min(selector.Items.Count - 1, -weekOffset));
@@ -395,6 +395,7 @@ namespace GlassPulse
             Get<TextBlock>("ResetText").Text = "下一周 " + summary.End.ToString("MM.dd") + " 00:00 · 本地时间";
             string[] missing = summary.Codex.UnknownModels.Keys.Concat(summary.Claude.UnknownModels.Keys).Distinct().ToArray();
             string warning = missing.Length > 0 ? "待定价：" + string.Join("、", missing) + "。token 已计入，金额仅包含已知价格。" : "";
+            if (summary.Codex.EstimatedModelTokens + summary.Claude.EstimatedModelTokens > 0) warning += " 内部模型别名按 ccusage 参考模型估算，实际路由可能不同。";
             if (summary.Codex.EstimatedCacheTtl + summary.Claude.EstimatedCacheTtl > 0)
                 warning += " 部分旧日志未记录缓存时长，按短期缓存写入估算。";
             if (summary.Errors > 0) warning += " 部分日志无法读取或格式异常，用量可能不完整。";

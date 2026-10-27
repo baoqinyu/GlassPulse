@@ -19,13 +19,17 @@ namespace GlassPulse
         public long CacheWriteLong { get; set; }
         public long Output { get; set; }
         public long PromptSize { get; set; }
+        public long ReasoningOutput { get; set; }
+        public long ReportedTotal { get; set; }
+        public long Sequence { get; set; }
+        public bool EstimatedModel { get; set; }
         public bool Modern { get; set; }
         public bool EstimatedCacheTtl { get; set; }
         public long Total { get { return Input + CacheRead + CacheWriteShort + CacheWriteLong + Output; } }
 
         public string Signature()
         {
-            return string.Join(":", Input, CacheRead, CacheWriteShort, CacheWriteLong, Output);
+            return string.Join(":", Input, CacheRead, CacheWriteShort, CacheWriteLong, Output, ReasoningOutput, ReportedTotal);
         }
 
         public UsageRecord Copy() { return (UsageRecord)MemberwiseClone(); }
@@ -45,6 +49,7 @@ namespace GlassPulse
         public long UnpricedTokens { get; set; }
         public int Requests { get; set; }
         public int EstimatedCacheTtl { get; set; }
+        public long EstimatedModelTokens { get; set; }
         public Dictionary<string, long> UnknownModels { get; set; }
         public long[] DailyTokens { get; set; }
         public decimal[] DailyCosts { get; set; }
@@ -116,6 +121,11 @@ namespace GlassPulse
             return local.Date.AddDays(-(((int)local.DayOfWeek - startDay + 7) % 7));
         }
 
+        public static string RangeLabel(DateTime start)
+        {
+            return start.ToString("MM.dd", CultureInfo.InvariantCulture) + "–" + start.AddDays(6).ToString("MM.dd", CultureInfo.InvariantCulture);
+        }
+
         public static WeekSummary Aggregate(IEnumerable<UsageRecord> records, PriceCatalog prices,
             DateTimeOffset now, TimeZoneInfo zone, int startDay, int weekOffset)
         {
@@ -143,6 +153,7 @@ namespace GlassPulse
                 summary.ModelTokens[model] = modelTokens + record.Total;
                 summary.Requests++;
                 if (record.EstimatedCacheTtl) summary.EstimatedCacheTtl++;
+                if (record.EstimatedModel) summary.EstimatedModelTokens += record.Total;
                 decimal cost;
                 if (prices.TryCost(record, out cost))
                 {
