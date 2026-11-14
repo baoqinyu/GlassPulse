@@ -1,5 +1,5 @@
 {
-  "VerifiedAt": "2026-10-27",
+  "VerifiedAt": "2026-11-13",
   "Basis": "USD per 1M tokens; standard global API token equivalent; excludes tools, tax, speed and regional premiums. This is a versioned snapshot, not a live price feed.",
   "Sources": [
     "https://developers.openai.com/api/docs/pricing",
@@ -12,7 +12,9 @@
     "https://developers.openai.com/api/docs/models/gpt-5.4",
     "https://developers.openai.com/api/docs/models/gpt-5.2-codex",
     "https://platform.claude.com/docs/en/about-claude/pricing",
-    "https://developers.openai.com/api/docs/models/gpt-5.6-sol"
+    "https://developers.openai.com/api/docs/models/gpt-5.6-sol",
+    "https://platform.claude.com/docs/en/models/fable-5-2/overview",
+    "https://platform.claude.com/docs/en/models/fable-5-2/whats-new-fable-5-2"
   ],
   "Models": [
     {
@@ -128,6 +130,22 @@
       "Output": 14,
       "WriteShort": 0,
       "WriteLong": 0
+    },
+    {
+      "Model": "claude-fable-5-2",
+      "Input": 8,
+      "Cached": 0.2,
+      "Output": 40,
+      "WriteShort": 10,
+      "WriteLong": 16
+    },
+    {
+      "Model": "claude-mythos-5-2",
+      "Input": 8,
+      "Cached": 0.2,
+      "Output": 40,
+      "WriteShort": 10,
+      "WriteLong": 16
     },
     {
       "Model": "claude-fable-5-1",

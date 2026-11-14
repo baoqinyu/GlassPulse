@@ -48,7 +48,7 @@ internal static class CoreTests
     private static string Claude(string id = "m1", long output = 100, bool oneHour = false)
     {
         return Encode(new { type = "assistant", timestamp = "2026-10-27T10:00:00Z", requestId = "req1",
-            message = new { id = id, model = "claude-opus-5-5", content = "合成测试数据",
+            message = new { id = id, model = "claude-opus-5-5", content = "�ϳɲ�������",
                 usage = new { input_tokens = 100, cache_read_input_tokens = 800, cache_creation_input_tokens = 200, output_tokens = output,
                     cache_creation = new { ephemeral_1h_input_tokens = oneHour ? 200 : 0, ephemeral_5m_input_tokens = oneHour ? 0 : 200 } } } });
     }
@@ -158,6 +158,55 @@ internal static class CoreTests
             decimal cost; r.PromptSize = 100000; prices.TryCost(r, out cost); Equal(.6m, cost);
             r.PromptSize = 100001; prices.TryCost(r, out cost); Equal(3m, cost);
         });
+        Run("Fable 5.2 prices every token category at its own standard rate", delegate {
+            UsageRecord r = Record(10000, "claude-fable-5-2"); r.Provider = "claude";
+            r.CacheRead = 20000; r.CacheWriteShort = 30000; r.CacheWriteLong = 40000; r.Output = 50000;
+            r.PromptSize = 100000;
+            decimal cost; Check(prices.TryCost(r, out cost), "Fable 5.2 was not priced"); Equal(3.024m, cost);
+        });
+        Run("Mythos 5.2 shares Fable 5.2 standard and cache prices", delegate {
+            UsageRecord r = Record(10000, "claude-mythos-5-2"); r.Provider = "claude";
+            r.CacheRead = 20000; r.CacheWriteShort = 30000; r.CacheWriteLong = 40000; r.Output = 50000;
+            r.PromptSize = 100000;
+            decimal cost; Check(prices.TryCost(r, out cost), "Mythos 5.2 was not priced"); Equal(3.024m, cost);
+        });
+        Run("Fable and Mythos 5.2 aliases retain exact version matching", delegate {
+            foreach (string model in new[] { " CLAUDE-FABLE-5.2 ", "claude-fable-5-2[1m]",
+                "claude-fable-5-2-20261109", "claude-mythos-5.2-2026-11-09[1m]" })
+            {
+                decimal cost; Check(prices.TryCost(Record(1000, model), out cost), "Documented alias was not priced"); Equal(.008m, cost);
+            }
+            foreach (string model in new[] { "claude-fable-5-3", "claude-mythos-5-3", "claude-fable-5-2-unlisted" })
+            {
+                decimal cost; Check(!prices.TryCost(Record(1000, model), out cost), "Unknown model price was guessed");
+            }
+        });
+        Run("Fable and Mythos 5.2 keep standard prices through 1M context", delegate {
+            foreach (string model in new[] { "claude-fable-5-2", "claude-mythos-5-2" })
+            {
+                UsageRecord r = Record(10000, model); r.CacheRead = 990000; r.Output = 10000; r.PromptSize = 1000000;
+                decimal cost; Check(prices.TryCost(r, out cost), "Long-context record was not priced"); Equal(.678m, cost);
+            }
+        });
+        Run("Fable and Mythos 5 and 5.1 keep their distinct historical cache rates", delegate {
+            foreach (string family in new[] { "claude-fable-5", "claude-mythos-5" })
+            {
+                UsageRecord r = Record(1000, family); r.CacheRead = 1000000;
+                decimal cost; Check(prices.TryCost(r, out cost), "Version 5 price missing"); Equal(1.01m, cost);
+                r.Model = family + "-1";
+                Check(prices.TryCost(r, out cost), "Version 5.1 price missing"); Equal(.26m, cost);
+            }
+        });
+        Run("Fable 5.2 Claude logs feed weekly costs with five-minute cache writes", delegate {
+            string root = Sandbox(); Write(ClaudePath(root), Claude().Replace("claude-opus-5-5", "claude-fable-5-2"));
+            WeekSummary week = Refresh(Engine(root)); Equal(1200L, week.Claude.Tokens);
+            Equal(0L, week.Claude.UnpricedTokens); Equal(.00696m, week.Claude.Cost);
+        });
+        Run("Mythos 5.2 Claude logs feed weekly costs with one-hour cache writes", delegate {
+            string root = Sandbox(); Write(ClaudePath(root), Claude(oneHour: true).Replace("claude-opus-5-5", "claude-mythos-5-2"));
+            WeekSummary week = Refresh(Engine(root)); Equal(1200L, week.Claude.Tokens);
+            Equal(0L, week.Claude.UnpricedTokens); Equal(.00816m, week.Claude.Cost);
+        });
         Run("Monday rollover and half-open week boundaries", delegate {
             UsageRecord[] r = { Record(100, stamp: "2026-10-25T23:59:59Z"), Record(200, stamp: "2026-10-26T00:00:00Z"), Record(300, stamp: "2026-11-02T00:00:00Z") };
             WeekSummary week = WeekClock.Aggregate(r, prices, Now, TimeZoneInfo.Utc, 1, 0); Equal(200L, week.Codex.Tokens);
@@ -235,7 +284,7 @@ internal static class CoreTests
         Run("Settings persist without storing conversations", delegate {
             string root = Sandbox(); Settings settings = new Settings { CodexBudget = 240, ClaudeBudget = 500, RefreshSeconds = 3, Mini = true };
             settings.Save(root); Settings loaded = Settings.Load(root); Equal(240m, loaded.CodexBudget); Equal(3, loaded.RefreshSeconds); Equal(true, loaded.Mini);
-            Check(!File.ReadAllText(Path.Combine(root, "settings.json")).Contains("合成测试数据"), "Message content leaked into preferences");
+            Check(!File.ReadAllText(Path.Combine(root, "settings.json")).Contains("�ϳɲ�������"), "Message content leaked into preferences");
         });
         Run("Cached totals still roll over and navigate without log writes", delegate {
             string root = Sandbox(); Write(ClaudePath(root), Claude()); UsageEngine engine = Engine(root);
@@ -279,9 +328,9 @@ internal static class CoreTests
             Equal(300L,week.Codex.Tokens+week.Claude.Tokens);
         });
         Run("Week labels show both endpoints across month and year boundaries", delegate {
-            Equal("09.01–09.07",WeekClock.RangeLabel(new DateTime(2025,9,1)));
-            Equal("08.31–09.06",WeekClock.RangeLabel(new DateTime(2026,8,31)));
-            Equal("12.28–01.03",WeekClock.RangeLabel(new DateTime(2026,12,28)));
+            Equal("09.01�C09.07",WeekClock.RangeLabel(new DateTime(2025,9,1)));
+            Equal("08.31�C09.06",WeekClock.RangeLabel(new DateTime(2026,8,31)));
+            Equal("12.28�C01.03",WeekClock.RangeLabel(new DateTime(2026,12,28)));
         });
         Run("Compressed rollouts contribute and unchanged archives are not reread", delegate {
             string root=Sandbox();File.WriteAllBytes(CodexPath(root)+".zst",CompressedFixture);var engine=Engine(root);
