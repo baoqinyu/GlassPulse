@@ -1,6 +1,6 @@
 # GlassPulse
 
-[��������](README.zh-CN.md) �� English
+[简体中文](README.zh-CN.md) · English
 
 A glass desktop meter for **Codex and Claude Code tokens, weekly API-equivalent cost, and expandable analytics**.
 
@@ -33,11 +33,11 @@ Windows 10 version 1903 or later / Windows 11 and .NET Framework 4.8 are require
 | Date dropdown | Select any available historical week |
 | Right-click / Settings | Choose Codex, Claude, or both; change appearance |
 | Drag the background | Move; snap near screen edges |
-| `?` / `Esc` | Hide to tray; collection continues |
+| `−` / `Esc` | Hide to tray; collection continues |
 | `Ctrl+Alt+G` | Show/hide and restore mouse interaction when the shortcut is available |
-| Tray �� Restore mouse interaction | Recover from passthrough or a shortcut conflict |
+| Tray → Restore mouse interaction | Recover from passthrough or a shortcut conflict |
 | `F5` | Refresh now |
-| Tray �� Exit | Quit completely |
+| Tray → Exit | Quit completely |
 
 ## Analytics and accounting
 
@@ -47,7 +47,7 @@ Each budget bar represents **priced API-equivalent usage / your chosen weekly bu
 
 Dollars use standard global API token prices, including supported cache and long-context categories. The active catalog revalues all selected weeks at its configured prices. Fast/priority premiums, regional premiums, tool calls, taxes and account discounts are excluded.
 
-Unknown prices retain their tokens. Fully unpriced usage displays `������`; a partially priced total uses `��`. Old Claude records without cache TTL use the short-write rate and show an estimate notice. Reasoning already included in output is counted once. Duplicate streamed Claude blocks are reconciled. Codex follows canonical token-count request deltas, skips unchanged cumulative snapshots and copied fork prefixes, and adds only explicit compaction requests not already covered by cumulative usage. Request metadata is not another request. Routing aliases use the ccusage reference-model timeline and remain labelled estimates.
+Unknown prices retain their tokens. Fully unpriced usage displays `待定价`; a partially priced total uses `≥`. Old Claude records without cache TTL use the short-write rate and show an estimate notice. Reasoning already included in output is counted once. Duplicate streamed Claude blocks are reconciled. Codex follows canonical token-count request deltas, skips unchanged cumulative snapshots and copied fork prefixes, and adds only explicit compaction requests not already covered by cumulative usage. Request metadata is not another request. Routing aliases use the ccusage reference-model timeline and remain labelled estimates.
 
 ## Local data and history
 
@@ -61,7 +61,7 @@ The portable `data` folder is created **beside the executable**, containing `set
 .\GlassPulse.exe --data-dir ".\my-data"
 ```
 
-The price catalog has 32 entries, refreshed on 2026-11-13. Claude Fable 5.2 and Mythos 5.2 are included with standard rates of $8 input, $40 output, $0.20 cache reads, $10 five-minute cache writes and $16 one-hour cache writes per 1M tokens. Their full 1M context window uses these same rates; 5 and 5.1 retain their separate prices. It is a local snapshot. Upgrades add missing bundled models while preserving existing edited rates; edit existing rates through Settings �� Edit price catalog. Calendar weeks roll over automatically, and prices do not download automatically.
+The price catalog has 32 entries, refreshed on 2026-11-13. Claude Fable 5.2 and Mythos 5.2 are included with standard rates of $8 input, $40 output, $0.20 cache reads, $10 five-minute cache writes and $16 one-hour cache writes per 1M tokens. Their full 1M context window uses these same rates; 5 and 5.1 retain their separate prices. It is a local snapshot. Upgrades add missing bundled models while preserving existing edited rates; edit existing rates through Settings → Edit price catalog. Calendar weeks roll over automatically, and prices do not download automatically.
 
 Official sources: [OpenAI pricing](https://developers.openai.com/api/docs/pricing), [historical Sol pricing](https://developers.openai.com/api/docs/models/gpt-5.6-sol), [Claude pricing](https://platform.claude.com/docs/en/about-claude/pricing). Sources are also recorded in the catalog.
 

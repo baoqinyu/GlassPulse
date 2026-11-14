@@ -48,7 +48,7 @@ internal static class CoreTests
     private static string Claude(string id = "m1", long output = 100, bool oneHour = false)
     {
         return Encode(new { type = "assistant", timestamp = "2026-10-27T10:00:00Z", requestId = "req1",
-            message = new { id = id, model = "claude-opus-5-5", content = "�ϳɲ�������",
+            message = new { id = id, model = "claude-opus-5-5", content = "合成测试数据",
                 usage = new { input_tokens = 100, cache_read_input_tokens = 800, cache_creation_input_tokens = 200, output_tokens = output,
                     cache_creation = new { ephemeral_1h_input_tokens = oneHour ? 200 : 0, ephemeral_5m_input_tokens = oneHour ? 0 : 200 } } } });
     }
@@ -284,7 +284,7 @@ internal static class CoreTests
         Run("Settings persist without storing conversations", delegate {
             string root = Sandbox(); Settings settings = new Settings { CodexBudget = 240, ClaudeBudget = 500, RefreshSeconds = 3, Mini = true };
             settings.Save(root); Settings loaded = Settings.Load(root); Equal(240m, loaded.CodexBudget); Equal(3, loaded.RefreshSeconds); Equal(true, loaded.Mini);
-            Check(!File.ReadAllText(Path.Combine(root, "settings.json")).Contains("�ϳɲ�������"), "Message content leaked into preferences");
+            Check(!File.ReadAllText(Path.Combine(root, "settings.json")).Contains("合成测试数据"), "Message content leaked into preferences");
         });
         Run("Cached totals still roll over and navigate without log writes", delegate {
             string root = Sandbox(); Write(ClaudePath(root), Claude()); UsageEngine engine = Engine(root);
@@ -328,9 +328,9 @@ internal static class CoreTests
             Equal(300L,week.Codex.Tokens+week.Claude.Tokens);
         });
         Run("Week labels show both endpoints across month and year boundaries", delegate {
-            Equal("09.01�C09.07",WeekClock.RangeLabel(new DateTime(2025,9,1)));
-            Equal("08.31�C09.06",WeekClock.RangeLabel(new DateTime(2026,8,31)));
-            Equal("12.28�C01.03",WeekClock.RangeLabel(new DateTime(2026,12,28)));
+            Equal("09.01–09.07",WeekClock.RangeLabel(new DateTime(2025,9,1)));
+            Equal("08.31–09.06",WeekClock.RangeLabel(new DateTime(2026,8,31)));
+            Equal("12.28–01.03",WeekClock.RangeLabel(new DateTime(2026,12,28)));
         });
         Run("Compressed rollouts contribute and unchanged archives are not reread", delegate {
             string root=Sandbox();File.WriteAllBytes(CodexPath(root)+".zst",CompressedFixture);var engine=Engine(root);
